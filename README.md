@@ -1,1 +1,1 @@
-Send Buld Email API using GO 
+Send Bulk Email API using GO 
