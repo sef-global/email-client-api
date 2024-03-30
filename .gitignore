@@ -1,0 +1,30 @@
+# Go binary and executable files
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+
+# Go test and coverage files
+*.test
+*.out
+*.cover
+
+# Go build and dependency directories
+/bin/
+/pkg/
+/vendor/
+
+# IDE and editor specific files
+.idea/
+.vscode/
+*.sublime-project
+*.sublime-workspace
+
+# OS generated files
+.DS_Store
+Thumbs.db
+
+# Go API specific files
+/api/
+/swagger/
