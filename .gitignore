@@ -4,7 +4,7 @@
 *.dll
 *.so
 *.dylib
-
+.env
 # Go test and coverage files
 *.test
 *.out
