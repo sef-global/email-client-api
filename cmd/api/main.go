@@ -12,13 +12,14 @@ import (
 	"strings"
 	"time"
 
-	"github.com/mayura-andrew/email-client/internal/vcs"
+	"github.com/joho/godotenv"
 	"github.com/mayura-andrew/email-client/internal/jsonlog"
-
-	
+	"github.com/mayura-andrew/email-client/internal/vcs"
 )
 
-var (version = vcs.Version())
+var (version9 = vcs.Version())
+
+const version = "1.0.0"
 
 type config struct {
 
@@ -42,7 +43,7 @@ type config struct {
 
 type application struct {
 	config config
-	// mailer mailer.mailer
+	mailer Mailer
 	logger *jsonlog.Logger
 	
 }
@@ -51,10 +52,17 @@ func main() {
 
 	var cfg config
 
-	flag.IntVar(&cfg.port, "port", 8000, "Email API Server Port")
+	flag.IntVar(&cfg.port, "port", 4000, "Email API Server Port")
 	flag.StringVar(&cfg.env, "env", "development", "Environment (development|statging|production)")
 
+	err := godotenv.Load(".env")
+    if err != nil {
+        log.Fatalf("Error loading environment variables file")
+    }
+
 	envVarValue := os.Getenv("SMTPPORT")
+
+
 
 	if envVarValue == "" {
 		fmt.Println("Environment variable is not set")
@@ -108,12 +116,23 @@ func main() {
 	}))
 
 
+	recipients := []string{"recipient1@example.com", "recipient2@example.com", "mayuraahalakoon@gmail.com"}
+	body := `"key":"value"`
+	mailer, err := New(cfg.smtp.host, cfg.smtp.port, cfg.smtp.username, cfg.smtp.password, cfg.smtp.sender, recipients, body)	
+	if err != nil {
+		log.Fatalf("Failed to create mailer: %v", err)
+	}
+
 	app := &application{
 		config: cfg,
 		logger: logger,
-		// mailer: mailer.New(cfg.smtp.host, cfg.smtp.port, cfg.smtp.username, cfg.smtp.password, cfg.smtp.sender),
+		mailer: *mailer,
 	}
 
-	err = app.serve()
+	app.serve()
 	logger.PrintFatal(err, nil)
+	// if err := app.serve(); err != nil {
+    //     fmt.Println("Error starting server:", err)
+    //     return
+    // }
 }

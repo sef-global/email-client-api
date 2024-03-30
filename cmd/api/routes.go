@@ -17,6 +17,8 @@ func (app *application) routes() http.Handler {
 
 	router.HandlerFunc(http.MethodGet, "/", app.rootHandler)
 
+	router.HandlerFunc(http.MethodPost, "/send-email", app.sendEmailHandler)
+
 	return router
 
 }
