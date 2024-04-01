@@ -116,12 +116,19 @@ func main() {
 	}))
 
 
-	recipients := []string{"recipient1@example.com", "recipient2@example.com", "mayuraahalakoon@gmail.com"}
-	body := `"key":"value"`
-	mailer, err := New(cfg.smtp.host, cfg.smtp.port, cfg.smtp.username, cfg.smtp.password, cfg.smtp.sender, recipients, body)	
-	if err != nil {
-		log.Fatalf("Failed to create mailer: %v", err)
-	}
+	recipients := []string{"s22010178@ousl.lk", "mayuraandrewalahakoon@gmail.com", "mayuraalahakoon@gmail.com"}
+	body := []string{"Hello World"} // Convert body to a slice of strings
+	subject := "TEST EMAIL"
+
+	// Convert body slice to a single string
+	//bodyString := strings.Join(body, "\n")
+
+	mailer, err := New(cfg.smtp.host, cfg.smtp.port, cfg.smtp.username, cfg.smtp.password, cfg.smtp.sender, subject, recipients, body)
+			if err != nil {
+				log.Fatalf("Failed to create mailer: %v", err)
+			}
+
+    
 
 	app := &application{
 		config: cfg,
