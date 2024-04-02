@@ -14,10 +14,11 @@ import (
 
 	"github.com/joho/godotenv"
 	"github.com/mayura-andrew/email-client/internal/jsonlog"
+	"github.com/mayura-andrew/email-client/internal/mailer"
 	"github.com/mayura-andrew/email-client/internal/vcs"
 )
 
-var (version9 = vcs.Version())
+var (version1 = vcs.Version())
 
 const version = "1.0.0"
 
@@ -43,9 +44,8 @@ type config struct {
 
 type application struct {
 	config config
-	mailer Mailer
+	mailer mailer.Mailer
 	logger *jsonlog.Logger
-	
 }
 func main() {
 	fmt.Println("Hello world")
@@ -84,10 +84,10 @@ func main() {
 
 	fmt.Printf("%s", smtpSender)
 	flag.StringVar(&cfg.smtp.host, "smtp-host", os.Getenv("SMTPHOST"), "SMTP host")
-	flag.IntVar(&cfg.smtp.port, "smtp-port", intValue, "SMTP port")
+	flag.IntVar(&cfg.smtp.port, "SMTPPORT", intValue, "SMTP port")
 	flag.StringVar(&cfg.smtp.username, "smtp-username", os.Getenv("SMTPUSERNAME"), "SMTP username")
 	flag.StringVar(&cfg.smtp.password, "smtp-password", os.Getenv("SMTPPASS"), "SMTP password")
-	flag.StringVar(&cfg.smtp.sender, "smtp-sender", smtpSender, "SMTP sender")
+	flag.StringVar(&cfg.smtp.sender, "SMTPSENDER", smtpSender, "SMTP sender")
 
 
 	flag.Func("cors-trusted-origins", "Trusted CORS origins (space separated)", func(val string) error {
@@ -116,30 +116,32 @@ func main() {
 	}))
 
 
-	recipients := []string{"s22010178@ousl.lk", "mayuraandrewalahakoon@gmail.com", "mayuraalahakoon@gmail.com"}
-	body := []string{"Hello World"} // Convert body to a slice of strings
-	subject := "TEST EMAIL"
+	// recipients := []string{"s22010178@ousl.lk", "mayuraandrewalahakoon@gmail.com", "mayuraalahakoon@gmail.com"}
+	// body := []string{"Hello World"} // Convert body to a slice of strings
+	// subject := "TEST EMAIL"
 
-	// Convert body slice to a single string
-	//bodyString := strings.Join(body, "\n")
+	// // Convert body slice to a single string
+	// //bodyString := strings.Join(body, "\n")
 
-	mailer, err := New(cfg.smtp.host, cfg.smtp.port, cfg.smtp.username, cfg.smtp.password, cfg.smtp.sender, subject, recipients, body)
-			if err != nil {
-				log.Fatalf("Failed to create mailer: %v", err)
-			}
+	// mailer, err := New(cfg.smtp.host, cfg.smtp.port, cfg.smtp.username, cfg.smtp.password, cfg.smtp.sender, subject, recipients, body)
+	// 		if err != nil {
+	// 			log.Fatalf("Failed to create mailer: %v", err)
+	// 		}
 
     
 
 	app := &application{
 		config: cfg,
 		logger: logger,
-		mailer: *mailer,
+		mailer: mailer.New(cfg.smtp.host, cfg.smtp.port, cfg.smtp.username, cfg.smtp.password, cfg.smtp.sender),
+	}
+	
+
+
+
+	err = app.serve()
+	if err != nil {
+		logger.PrintFatal(err, nil)
 	}
 
-	app.serve()
-	logger.PrintFatal(err, nil)
-	// if err := app.serve(); err != nil {
-    //     fmt.Println("Error starting server:", err)
-    //     return
-    // }
 }
