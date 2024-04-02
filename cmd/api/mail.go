@@ -1,17 +1,13 @@
 package main
 
 import (
-	"bytes"
-	"embed"
 	"encoding/json"
 	"fmt"
-	"html/template"
 	"net/http"
 
 	"github.com/go-mail/mail/v2"
 )
 
-var templateFS embed.FS
 
 type Mailer struct {
 	dailer  *mail.Dialer
@@ -28,7 +24,7 @@ func New(host string, port int, username, password, sender, subject string, reci
 	m.SetHeader("From", sender)
 	m.SetHeader("To", recipients...) // Set the "To" header to the slice of recipients
 	m.SetHeader("Subject", subject)
-	m.SetBody("text/plain", body) // Join the elements of the body slice into a single string
+	m.SetBody("text/html", body) // Join the elements of the body slice into a single string
 
 	err := d.DialAndSend(m)
 	if err != nil {
@@ -58,8 +54,6 @@ func (app *application) sendEmailHandler(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
-	// templeFile := "templates/email_template.tmpl"
-	t, err := template.New("email").ParseFS(templateFS, "email_template.tmpl")
 
 	if err != nil {
 		fmt.Print(err)
@@ -67,20 +61,13 @@ func (app *application) sendEmailHandler(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
-	buf := new(bytes.Buffer)
 
-	err = t.Execute(buf, req.Body)
-	if err != nil {
-		http.Error(w, "Failed to execute email template", http.StatusInternalServerError)
-		return
 
-	}
 
-	htmlBody := buf.String()
 
 
 		// Call the New function
-	_, err = New(app.config.smtp.host, app.config.smtp.port, app.config.smtp.username, app.config.smtp.password, req.Sender, req.Subject, req.Recipients, htmlBody)
+	_, err = New(app.config.smtp.host, app.config.smtp.port, app.config.smtp.username, app.config.smtp.password, req.Sender, req.Subject, req.Recipients, req.Body)
 	if err != nil {
 		http.Error(w, "Failed to send email", http.StatusInternalServerError)
 		return
