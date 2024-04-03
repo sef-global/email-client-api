@@ -60,18 +60,6 @@ func (app *application) sendEmailHandler(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
-
-	if err != nil {
-		fmt.Print(err)
-		http.Error(w, "Faild to parse email template", http.StatusInternalServerError)
-		return
-	}
-
-
-
-
-
-
 		// Call the New function
 	_, err = New(app.config.smtp.host, app.config.smtp.port, app.config.smtp.username, app.config.smtp.password, req.Sender, req.Subject, req.Recipients, req.Body)
 	if err != nil {
