@@ -20,5 +20,7 @@ func (app *application) routes() http.Handler {
 
 	router.HandlerFunc(http.MethodPost, "/api/v1/send-email-temp", app.emailSendHandler)
 
+	router.HandlerFunc(http.MethodGet, "/api/v1/track", app.track)
+
 	return router
 }
