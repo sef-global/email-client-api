@@ -3,7 +3,10 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	"log"
 	"net/http"
+	"sync"
+	"time"
 
 	"github.com/go-mail/mail/v2"
 )
@@ -14,30 +17,81 @@ type Mailer struct {
 	sender string
 }
 
+type EmailStatus struct {
+	Sent bool
+	Opened bool
+	SentTime time.Time
+}
 // func New(host string, port int, username)
 
 func New(host string, port int, username, password, sender, subject string, recipients []string, body string) (*Mailer, error) {
 	d := mail.NewDialer(host, port, username, password)
 
-	// Send a test email to each recipient to verify the SMTP server connection
+	emailStatuses := make(map[string]*EmailStatus)
+	var statusMutex sync.Mutex
 
-	for _, recipient := range recipients {
-		m := mail.NewMessage()
-		m.SetHeader("From", sender)
-		m.SetHeader("To", recipients...) // Set the "To" header to the slice of recipients
-		m.SetHeader("Subject", subject)
-	
-		body += "\n<img src=\"http://localhost:4000/api/v1/track?email=" + recipient + "\" width=\"1\" height=\"1\" />"
-	
-		m.SetBody("text/html", body) // Join the elements of the body slice into a single string
-	
-		err := d.DialAndSend(m)
-		if err != nil {
-			return nil, fmt.Errorf("failed to send test email: %w", err)
-		}
-	
-		fmt.Println("Sent test email successfully to -> " + recipient)
+	// create a channel to queue the recipients
+	queue := make(chan string)
+
+
+	// create an WaitGroup to wait for all emails to be sent
+	var wg sync.WaitGroup
+
+
+	// start a number of worker goroutines
+	for i := 0; i < 10; i++ {
+		go func() {
+			for recipient := range queue {
+				m := mail.NewMessage()
+				m.SetHeader("From", sender)
+				m.SetHeader("To", recipient)
+				m.SetHeader("Subject", subject)
+			
+				body += "\n<img src=\"http://localhost:4000/api/v1/track?email=" + recipient + "\" width=\"1\" height=\"1\" />"
+			
+				m.SetBody("text/html", body) // Join the elements of the body slice into a single string
+			
+				err := d.DialAndSend(m)
+				if err != nil {
+                    fmt.Println("Failed to send test email to -> " + recipient + ": " + err.Error())
+				} else {
+					fmt.Println("Sent test email successfully to -> " + recipient)
+					statusMutex.Lock()
+					emailStatuses[recipient].Sent = true
+					statusMutex.Unlock()
+				}
+
+				// Decrement the waitGroup counter
+				wg.Done()
+			}
+		}()
 	}
+
+		// Enqueue the recipients and increment the WaitGroup counter
+		for _, recipient := range recipients {
+			wg.Add(1)
+			queue <- recipient
+	
+			// Initialize the status of the email
+			statusMutex.Lock()
+			emailStatuses[recipient] = &EmailStatus{
+				Sent: false,
+				Opened: false,
+				SentTime: time.Now(),
+			}
+	
+			statusMutex.Unlock()
+		}
+	// Close the channel to signal that no more recipients will be enqueued 	
+	close(queue)
+
+	// Wait for all emails to be sent
+	wg.Wait()
+
+	for recipient, status := range emailStatuses {
+        log.Printf("Email to %s: sent=%v, opened=%v, sentTime=%v", recipient, status.Sent, status.Opened, status.SentTime)
+	}
+
 	return &Mailer{
 		dailer:     d,
 		sender:     sender,
@@ -72,20 +126,6 @@ func (app *application) sendEmailHandler(w http.ResponseWriter, r *http.Request)
     w.Write([]byte("Email sent successfully."))
 }
 
-func (app *application) emailSendHandler(w http.ResponseWriter, r *http.Request) {
-	email := "mayuraalahakoon@gmail.com"
-	data := "Test Email Content"
-	err := app.mailer.Send(email, "test_email.tmpl",  data)
-	if err != nil {
-		app.serverErrorRespone(w, r, err)
-		return
-	}
-
-	err = app.writeJSON(w, http.StatusCreated, envelop{"data" : data}, nil)
-	if err != nil {
-		app.serverErrorRespone(w, r, err)
-	}
-}
 
 // email tracking
 
@@ -95,6 +135,7 @@ func (app *application) track(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Missing email parameter", http.StatusBadRequest)
 		return
 	}
-	w.WriteHeader(http.StatusOK)
-    w.Write([]byte("User is opened our email:)"))
+	log.Printf("Email opened: %s", email)
+	w.Header().Set("Content-Type", "image/gif")
+	w.Write([]byte("GIF89a\x01\x00\x01\x00\x80\x00\x00\xff\xff\xff\xff\xff\xff,\x00\x00\x00\x00\x01\x00\x01\x00\x00\x02\x02D\x01\x00;"))
 }
