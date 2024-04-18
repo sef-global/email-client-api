@@ -1,6 +1,8 @@
 package main
 
 import (
+	"context"
+	"database/sql"
 	"expvar"
 	"flag"
 	"fmt"
@@ -16,6 +18,7 @@ import (
 	"github.com/mayura-andrew/email-client/internal/jsonlog"
 	"github.com/mayura-andrew/email-client/internal/mailer"
 	"github.com/mayura-andrew/email-client/internal/vcs"
+	_ "github.com/lib/pq"
 )
 
 var (version1 = vcs.Version())
@@ -40,6 +43,10 @@ type config struct {
 	cors struct {
 		trustedOrigns []string
 	}
+
+	db struct {
+		dsn string
+	}
 }
 
 type application struct {
@@ -54,6 +61,7 @@ func main() {
 
 	flag.IntVar(&cfg.port, "port", 4000, "Email API Server Port")
 	flag.StringVar(&cfg.env, "env", "development", "Environment (development|statging|production)")
+	flag.StringVar(&cfg.db.dsn, "db-dsn", "postgres://andrew:OslpJueINuYbKRmc7UvNRjyqZ7bV1Byq@dpg-cogkfq21hbls738s5lm0-a.singapore-postgres.render.com/emailbulk", "PostgreSQL DSN")
 
 	err := godotenv.Load(".env")
     if err != nil {
@@ -116,19 +124,14 @@ func main() {
 	}))
 
 
-	// recipients := []string{"s22010178@ousl.lk", "mayuraandrewalahakoon@gmail.com", "mayuraalahakoon@gmail.com"}
-	// body := []string{"Hello World"} // Convert body to a slice of strings
-	// subject := "TEST EMAIL"
+	db, err := openDB(cfg)
 
-	// // Convert body slice to a single string
-	// //bodyString := strings.Join(body, "\n")
+	if err != nil {
+		logger.PrintFatal(err, map[string]string{})
+	}
+	defer db.Close()
 
-	// mailer, err := New(cfg.smtp.host, cfg.smtp.port, cfg.smtp.username, cfg.smtp.password, cfg.smtp.sender, subject, recipients, body)
-	// 		if err != nil {
-	// 			log.Fatalf("Failed to create mailer: %v", err)
-	// 		}
-
-    
+	logger.PrintInfo("database connection pool established", map[string]string{})
 
 	app := &application{
 		config: cfg,
@@ -136,12 +139,31 @@ func main() {
 		mailer: mailer.New(cfg.smtp.host, cfg.smtp.port, cfg.smtp.username, cfg.smtp.password, cfg.smtp.sender),
 	}
 	
-
-
-
 	err = app.serve()
 	if err != nil {
 		logger.PrintFatal(err, nil)
 	}
+
+}
+
+
+func openDB(cfg config) (*sql.DB, error) {
+	db, err := sql.Open("postgres", cfg.db.dsn)
+
+	if err != nil {
+		return nil, err
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+
+	defer cancel()
+
+	err = db.PingContext(ctx)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return db, nil
 
 }
