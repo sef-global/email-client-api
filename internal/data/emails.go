@@ -34,7 +34,7 @@ func ValidateEmail(v *validator.Validator, email *Email) {
 	v.Check(len(email.Body) >= 1, "body", "must be more than 1 bytes long")
 }
 
-func (e EmailModel) InsertEmail(email *Email) error {
+func (e EmailModel) InsertEmail(email *Email, recipient string, isSent bool, sentTime time.Time) error {
 	query := `INSERT INTO emails (sender, body, subject) VALUES ($1, $2, $3) RETURNING id, created_at`
 
 	args := []any{email.Sender, email.Body, email.Subject}
@@ -44,28 +44,19 @@ func (e EmailModel) InsertEmail(email *Email) error {
 	if err != nil {
 		return err
 	}
-	done := make(chan bool, len(email.Recipients))
-
-	for _, recipient := range email.Recipients {
-		go func(recipient string) {
-			err := e.InsertEmailRecipient(email, recipient)
-			if err != nil {
-				log.Println(err)
-			}
-
-			done <- true
-		}(recipient)
-
+	err = e.InsertEmailRecipient(email, recipient, isSent, sentTime)
+	if err != nil {
+		log.Println(err)
 	}
-	return nil
 
+	return nil
 }
 
-func (e EmailModel) InsertEmailRecipient(email *Email, recipient string) error {
+func (e EmailModel) InsertEmailRecipient(email *Email, recipient string, isSent bool, sentTime time.Time) error {
 	query := `INSERT INTO recipients (email_id, recipient, status, sent_time, opened)
 	VALUES ($1, $2, $3, $4, $5)`
 
-	args := []any{email.ID, recipient, false, time.Now(), false}
+	args := []any{email.ID, recipient, isSent, sentTime, false}
 
 	_, err := e.DB.Exec(query, args...)
 	return err
