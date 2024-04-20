@@ -15,10 +15,11 @@ import (
 	"time"
 
 	"github.com/joho/godotenv"
+	_ "github.com/lib/pq"
+	"github.com/mayura-andrew/email-client/internal/data"
 	"github.com/mayura-andrew/email-client/internal/jsonlog"
 	"github.com/mayura-andrew/email-client/internal/mailer"
 	"github.com/mayura-andrew/email-client/internal/vcs"
-	_ "github.com/lib/pq"
 )
 
 var (version1 = vcs.Version())
@@ -46,6 +47,9 @@ type config struct {
 
 	db struct {
 		dsn string
+		maxOpenConns int
+		maxIdleConns int
+		maxIdleTime string
 	}
 }
 
@@ -53,24 +57,30 @@ type application struct {
 	config config
 	mailer mailer.Mailer
 	logger *jsonlog.Logger
+	models data.Models
 }
 func main() {
+
 	fmt.Println("Hello world")
 
 	var cfg config
-
-	flag.IntVar(&cfg.port, "port", 4000, "Email API Server Port")
-	flag.StringVar(&cfg.env, "env", "development", "Environment (development|statging|production)")
-	flag.StringVar(&cfg.db.dsn, "db-dsn", "postgres://andrew:OslpJueINuYbKRmc7UvNRjyqZ7bV1Byq@dpg-cogkfq21hbls738s5lm0-a.singapore-postgres.render.com/emailbulk", "PostgreSQL DSN")
 
 	err := godotenv.Load(".env")
     if err != nil {
         log.Fatalf("Error loading environment variables file")
     }
 
+	flag.IntVar(&cfg.port, "port", 4000, "Email API Server Port")
+	flag.StringVar(&cfg.env, "env", "development", "Environment (development|statging|production)")
+	flag.StringVar(&cfg.db.dsn, "db-dsn", "postgres://andrew:OslpJueINuYbKRmc7UvNRjyqZ7bV1Byq@dpg-cogkfq21hbls738s5lm0-a.singapore-postgres.render.com/emailbulk?",
+	"PostgreSQL DSN")
+
+	flag.IntVar(&cfg.db.maxOpenConns, "db-max-open-conns", 25, "PostgreSQL max open connections")
+	flag.IntVar(&cfg.db.maxIdleConns, "db-max-idle-conns", 25, "PostgreSQL max idle connections")
+	flag.StringVar(&cfg.db.maxIdleTime, "db-max-idle-times", "15m", "PostgreSQL max connection idle time")
+
+
 	envVarValue := os.Getenv("SMTPPORT")
-
-
 
 	if envVarValue == "" {
 		fmt.Println("Environment variable is not set")
@@ -82,7 +92,6 @@ func main() {
 		fmt.Println("Error conversting environment variable to integer:", err)
 		return
 	}
-
 	fmt.Printf("%d", intValue)
 
 	smtpSender, err := url.QueryUnescape(os.Getenv("SMTPSENDER"))
@@ -123,7 +132,6 @@ func main() {
 		return time.Now().Unix()
 	}))
 
-
 	db, err := openDB(cfg)
 
 	if err != nil {
@@ -137,6 +145,7 @@ func main() {
 		config: cfg,
 		logger: logger,
 		mailer: mailer.New(cfg.smtp.host, cfg.smtp.port, cfg.smtp.username, cfg.smtp.password, cfg.smtp.sender),
+		models: data.NewModel(db),
 	}
 	
 	err = app.serve()
@@ -148,18 +157,27 @@ func main() {
 
 
 func openDB(cfg config) (*sql.DB, error) {
-	db, err := sql.Open("postgres", cfg.db.dsn)
 
+	db, err := sql.Open("postgres", cfg.db.dsn)
 	if err != nil {
 		return nil, err
 	}
 
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	db.SetMaxOpenConns(cfg.db.maxOpenConns)
+	db.SetMaxIdleConns(cfg.db.maxIdleConns)
 
+	duration, err := time.ParseDuration(cfg.db.maxIdleTime)
+	if err != nil {
+		return nil, err
+	}
+
+	db.SetConnMaxIdleTime(duration)
+
+
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
 	err = db.PingContext(ctx)
-
 	if err != nil {
 		return nil, err
 	}

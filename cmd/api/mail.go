@@ -1,7 +1,6 @@
 package main
 
 import (
-	"encoding/json"
 	"fmt"
 	"log"
 	"net/http"
@@ -9,6 +8,8 @@ import (
 	"time"
 
 	"github.com/go-mail/mail/v2"
+	"github.com/mayura-andrew/email-client/internal/data"
+	"github.com/mayura-andrew/email-client/internal/validator"
 )
 
 
@@ -22,20 +23,24 @@ type EmailStatus struct {
 	Opened bool
 	SentTime time.Time
 }
+
+
 // func New(host string, port int, username)
 
 func New(host string, port int, username, password, sender, subject string, recipients []string, body string) (*Mailer, error) {
+
 	d := mail.NewDialer(host, port, username, password)
 
 	emailStatuses := make(map[string]*EmailStatus)
+
 	var statusMutex sync.Mutex
 
 	// create a channel to queue the recipients
 	queue := make(chan string)
-
-
 	// create an WaitGroup to wait for all emails to be sent
 	var wg sync.WaitGroup
+
+
 
 
 	// start a number of worker goroutines
@@ -108,22 +113,60 @@ func (app *application) sendEmailHandler(w http.ResponseWriter, r *http.Request)
         Body       string   `json:"body"`
     }
 
-	err := json.NewDecoder(r.Body).Decode(&req)
+	err := app.readJSON(w, r, &req) 
 	if err != nil {
-		http.Error(w, "Invalid request body", http.StatusBadRequest)
+		app.badRequestResponse(w, r, err)
 		return
 	}
 
-		// Call the New function
+	email := &data.Email {
+		Sender: req.Sender,
+		Recipients: req.Recipients,
+		Subject: req.Subject,
+		Body: req.Body,
+	}
+
+	v := validator.New()
+	
+	if data.ValidateEmail(v, email); !v.Valid() {
+		app.failedValidationResponse(w, r, v.Errors)
+		return
+	}
+
+	err = app.models.Emails.InsertEmail(email)
+	if err != nil {
+		app.serverErrorRespone(w, r, err)
+		return
+	}
+
+
+	
+	fmt.Fprintf(w, "%+v\n", req)
+
+	// err := json.NewDecoder(r.Body).Decode(&req)
+	// if err != nil {
+	// 	http.Error(w, "Invalid request body", http.StatusBadRequest)
+	// 	return
+	// }
+
+	// Call the New function
 	_, err = New(app.config.smtp.host, app.config.smtp.port, app.config.smtp.username, app.config.smtp.password, req.Sender, req.Subject, req.Recipients, req.Body)
 	if err != nil {
 		http.Error(w, "Failed to send email", http.StatusInternalServerError)
 		return
 	}
 
-    // Send the response
-    w.WriteHeader(http.StatusOK)
-    w.Write([]byte("Email sent successfully."))
+	headers := make(http.Header)
+	headers.Set("Location", fmt.Sprintf("/api/v1/emails/%d", email.ID))
+
+	err = app.writeJSON(w, http.StatusCreated, envelop{"email": email}, headers)
+	if err != nil {
+		app.serverErrorRespone(w, r, err)
+	}
+
+    // // Send the response
+    // w.WriteHeader(http.StatusOK)
+    // w.Write([]byte("Email sent successfully."))
 }
 
 
