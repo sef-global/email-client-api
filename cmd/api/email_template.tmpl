@@ -1,19 +1,10 @@
-{{define "subject"}}Test Email{{end}}
-{{define "plainBody"}}
-
-Test Email
-{{end}}
-{{define "htmlBody"}}
-<!doctype html>
+<!DOCTYPE html>
 <html>
 <head>
 <meta name="viewport" content="width=device-width" />
 <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
 </head>
 <body>
-<p>Hi,</p>
-<p>Test</p>
-<p>SEF</p>
+    <p>{{.Body}}</p>
 </body>
 </html>
-{{end}}

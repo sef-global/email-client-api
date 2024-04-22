@@ -1,6 +1,8 @@
 package main
 
 import (
+	"context"
+	"database/sql"
 	"expvar"
 	"flag"
 	"fmt"
@@ -13,11 +15,14 @@ import (
 	"time"
 
 	"github.com/joho/godotenv"
+	_ "github.com/lib/pq"
+	"github.com/mayura-andrew/email-client/internal/data"
 	"github.com/mayura-andrew/email-client/internal/jsonlog"
+	"github.com/mayura-andrew/email-client/internal/mailer"
 	"github.com/mayura-andrew/email-client/internal/vcs"
 )
 
-var (version9 = vcs.Version())
+var (version1 = vcs.Version())
 
 const version = "1.0.0"
 
@@ -39,30 +44,43 @@ type config struct {
 	cors struct {
 		trustedOrigns []string
 	}
+
+	db struct {
+		dsn string
+		maxOpenConns int
+		maxIdleConns int
+		maxIdleTime string
+	}
 }
 
 type application struct {
 	config config
-	mailer Mailer
+	mailer mailer.Mailer
 	logger *jsonlog.Logger
-	
+	models data.Models
 }
 func main() {
+
 	fmt.Println("Hello world")
 
 	var cfg config
-
-	flag.IntVar(&cfg.port, "port", 4000, "Email API Server Port")
-	flag.StringVar(&cfg.env, "env", "development", "Environment (development|statging|production)")
 
 	err := godotenv.Load(".env")
     if err != nil {
         log.Fatalf("Error loading environment variables file")
     }
 
+	flag.IntVar(&cfg.port, "port", 4000, "Email API Server Port")
+	flag.StringVar(&cfg.env, "env", "development", "Environment (development|statging|production)")
+	flag.StringVar(&cfg.db.dsn, "db-dsn", "postgres://andrew:OslpJueINuYbKRmc7UvNRjyqZ7bV1Byq@dpg-cogkfq21hbls738s5lm0-a.singapore-postgres.render.com/emailbulk?",
+	"PostgreSQL DSN")
+
+	flag.IntVar(&cfg.db.maxOpenConns, "db-max-open-conns", 25, "PostgreSQL max open connections")
+	flag.IntVar(&cfg.db.maxIdleConns, "db-max-idle-conns", 25, "PostgreSQL max idle connections")
+	flag.StringVar(&cfg.db.maxIdleTime, "db-max-idle-times", "15m", "PostgreSQL max connection idle time")
+
+
 	envVarValue := os.Getenv("SMTPPORT")
-
-
 
 	if envVarValue == "" {
 		fmt.Println("Environment variable is not set")
@@ -74,7 +92,6 @@ func main() {
 		fmt.Println("Error conversting environment variable to integer:", err)
 		return
 	}
-
 	fmt.Printf("%d", intValue)
 
 	smtpSender, err := url.QueryUnescape(os.Getenv("SMTPSENDER"))
@@ -84,10 +101,10 @@ func main() {
 
 	fmt.Printf("%s", smtpSender)
 	flag.StringVar(&cfg.smtp.host, "smtp-host", os.Getenv("SMTPHOST"), "SMTP host")
-	flag.IntVar(&cfg.smtp.port, "smtp-port", intValue, "SMTP port")
+	flag.IntVar(&cfg.smtp.port, "SMTPPORT", intValue, "SMTP port")
 	flag.StringVar(&cfg.smtp.username, "smtp-username", os.Getenv("SMTPUSERNAME"), "SMTP username")
 	flag.StringVar(&cfg.smtp.password, "smtp-password", os.Getenv("SMTPPASS"), "SMTP password")
-	flag.StringVar(&cfg.smtp.sender, "smtp-sender", smtpSender, "SMTP sender")
+	flag.StringVar(&cfg.smtp.sender, "SMTPSENDER", smtpSender, "SMTP sender")
 
 
 	flag.Func("cors-trusted-origins", "Trusted CORS origins (space separated)", func(val string) error {
@@ -115,31 +132,56 @@ func main() {
 		return time.Now().Unix()
 	}))
 
+	db, err := openDB(cfg)
 
-	recipients := []string{"s22010178@ousl.lk", "mayuraandrewalahakoon@gmail.com", "mayuraalahakoon@gmail.com"}
-	body := []string{"Hello World"} // Convert body to a slice of strings
-	subject := "TEST EMAIL"
+	if err != nil {
+		logger.PrintFatal(err, map[string]string{})
+	}
+	defer db.Close()
 
-	// Convert body slice to a single string
-	//bodyString := strings.Join(body, "\n")
-
-	mailer, err := New(cfg.smtp.host, cfg.smtp.port, cfg.smtp.username, cfg.smtp.password, cfg.smtp.sender, subject, recipients, body)
-			if err != nil {
-				log.Fatalf("Failed to create mailer: %v", err)
-			}
-
-    
+	logger.PrintInfo("database connection pool established", map[string]string{})
 
 	app := &application{
 		config: cfg,
 		logger: logger,
-		mailer: *mailer,
+		mailer: mailer.New(cfg.smtp.host, cfg.smtp.port, cfg.smtp.username, cfg.smtp.password, cfg.smtp.sender),
+		models: data.NewModel(db),
+	}
+	
+	err = app.serve()
+	if err != nil {
+		logger.PrintFatal(err, nil)
 	}
 
-	app.serve()
-	logger.PrintFatal(err, nil)
-	// if err := app.serve(); err != nil {
-    //     fmt.Println("Error starting server:", err)
-    //     return
-    // }
+}
+
+
+func openDB(cfg config) (*sql.DB, error) {
+
+	db, err := sql.Open("postgres", cfg.db.dsn)
+	if err != nil {
+		return nil, err
+	}
+
+	db.SetMaxOpenConns(cfg.db.maxOpenConns)
+	db.SetMaxIdleConns(cfg.db.maxIdleConns)
+
+	duration, err := time.ParseDuration(cfg.db.maxIdleTime)
+	if err != nil {
+		return nil, err
+	}
+
+	db.SetConnMaxIdleTime(duration)
+
+
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	err = db.PingContext(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	return db, nil
+
 }

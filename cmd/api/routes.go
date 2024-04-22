@@ -3,7 +3,6 @@ package main
 import (
 	"expvar"
 	"net/http"
-
 	"github.com/julienschmidt/httprouter"
 )
 
@@ -18,7 +17,7 @@ func (app *application) routes() http.Handler {
 	router.HandlerFunc(http.MethodGet, "/", app.rootHandler)
 
 	router.HandlerFunc(http.MethodPost, "/api/v1/send-email", app.sendEmailHandler)
+	router.HandlerFunc(http.MethodGet, "/api/v1/track", app.track)
 
 	return router
-
 }

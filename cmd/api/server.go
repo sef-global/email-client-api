@@ -56,5 +56,4 @@ func (app *application) serve() error {
 		"addr" : srv.Addr,
 	})
 	return nil
-
 }
