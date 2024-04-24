@@ -42,6 +42,8 @@ Searches for emails based on certain criteria. Accepts the following query param
 
 - `recipient`: The email address to search for.
 - `subject`: The subject to search for.
+- `sent`: A boolean indicating whether to search for emails that have been sent (`true`) or not sent (`false`).
+- `opened`: A boolean indicating whether to search for emails that have been opened (`true`) or not opened (`false`).
 
 ## Email Template
 
