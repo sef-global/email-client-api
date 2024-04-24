@@ -1,0 +1,50 @@
+{{define "subject"}}{{.Subject}}{{end}}
+
+{{define "plainBody"}}
+
+Hi, {{.Recipient}}
+
+<h1>Hi, {{.Recipient}}</h1>
+    <p>{{.Body}}</p>
+    <a href={{.Subject}} class="button">Button 1</a>
+    <a href={{.Subject}} class="button">Button 2</a>
+    <br>
+    <p>SEF</p>
+    <img src="http://localhost:4000/api/v1/track?email={{.Recipient}}" width="1" height="1" />
+{{end}}
+
+{{define "htmlBody"}}
+<!doctype html>
+<html>
+<head>
+    <meta name="viewport" content="width=device-width" />
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <style>
+    .button {
+        display: inline-block;
+        padding: 10px 20px;
+        font-size: 20px;
+        text-align: center;
+        text-decoration: none;
+        background-color: #007BFF;
+        color: white;
+        border-radius: 5px;
+        transition: background-color 0.3s;
+    }
+    .button:hover {
+        background-color: #0056b3;
+    }
+    </style>
+    </head>
+
+    <body>
+    <h1>Hi, {{.Recipient}}</h1>
+    <p>{{.Body}}</p>
+    <a href={{.Subject}} class="button">Button 1</a>
+    <a href={{.Subject}} class="button">Button 2</a>
+    <br>
+    <p>SEF</p>
+    <img src="http://localhost:4000/api/v1/track?email={{.Recipient}}" width="1" height="1" />
+    </body>
+</html>
+{{end}}
