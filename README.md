@@ -47,7 +47,7 @@ Searches for emails based on certain criteria. Accepts the following query param
 
 ## Email Template  (Status : Inprogress ⏳)
 
-The email content is generated from a Go template file, `test_email.tmpl`. This file defines two templates, `subject` and `plainBody`, which are used to generate the subject and body of the email, respectively. The templates have access to the following data:
+The email content is generated from a Go template file, `email_template.tmpl`. This file defines two templates, `subject` and `plainBody`, which are used to generate the subject and body of the email, respectively. The templates have access to the following data:
 
 - `Subject`: The subject of the email.
 - `Body`: The body of the email.

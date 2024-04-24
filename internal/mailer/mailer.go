@@ -77,7 +77,7 @@ func NewMail(e data.EmailModel, host string, port int, username, password, sende
 			defer wg.Done()
 			for recipient := range queue {
 
-				tmpl, err := template.ParseFiles(`C:\Dev\Lang\GO\email-client\internal\mailer\test_email.tmpl`)
+				tmpl, err := template.ParseFiles(`C:\Dev\Lang\GO\email-client\internal\mailer\email_template.tmpl`)
 				
 				if err != nil {
 					log.Println(err)
