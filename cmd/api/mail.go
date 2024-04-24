@@ -9,6 +9,7 @@ import (
 
 	"github.com/go-mail/mail/v2"
 	"github.com/mayura-andrew/email-client/internal/data"
+	"github.com/mayura-andrew/email-client/internal/mailer"
 	"github.com/mayura-andrew/email-client/internal/validator"
 )
 
@@ -151,7 +152,7 @@ func (app *application) sendEmailHandler(w http.ResponseWriter, r *http.Request)
 	// }
 
 	// Call the New function
-	_, err = New(app.models.Emails, app.config.smtp.host, app.config.smtp.port, app.config.smtp.username, app.config.smtp.password, req.Sender, req.Subject, req.Recipients, req.Body)
+	_, emailStatus, err := mailer.NewMail(app.models.Emails, app.config.smtp.host, app.config.smtp.port, app.config.smtp.username, app.config.smtp.password, req.Sender, req.Subject, req.Recipients, req.Body)
 	if err != nil {
 		http.Error(w, "Failed to send email", http.StatusInternalServerError)
 		return
@@ -160,7 +161,7 @@ func (app *application) sendEmailHandler(w http.ResponseWriter, r *http.Request)
 	headers := make(http.Header)
 	headers.Set("Location", fmt.Sprintf("/api/v1/emails/%d", email.ID))
 
-	err = app.writeJSON(w, http.StatusCreated, envelop{"email": email}, headers)
+	err = app.writeJSON(w, http.StatusCreated, envelop{"status": emailStatus}, headers)
 	if err != nil {
 		app.serverErrorRespone(w, r, err)
 	}
