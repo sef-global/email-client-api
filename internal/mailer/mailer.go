@@ -129,8 +129,6 @@ func NewMail(e data.EmailModel, host string, port int, username, password, sende
 		}()
 	}
 
-
-
 	// Enqueue the recipients and increment the WaitGroup counter
 	for _, recipient := range recipients {
 		queue <- recipient
@@ -161,5 +159,7 @@ func NewMail(e data.EmailModel, host string, port int, username, password, sende
 	}, emailStatuses, nil
 }
 
-
+func UpdateEmailTracking(e data.EmailModel, recipient string) error {
+	return e.UpdateEmail(recipient)
+}
 
