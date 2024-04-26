@@ -93,7 +93,7 @@ func NewMail(e data.EmailModel, host string, port int, username, password, sende
 			
 
 				bodyBuf := new(bytes.Buffer)
-				err = tmpl.ExecuteTemplate(bodyBuf, "plainBody", data)
+				err = tmpl.ExecuteTemplate(bodyBuf, "htmlBody", data)
 
 				if err != nil {
 					log.Println(err)
