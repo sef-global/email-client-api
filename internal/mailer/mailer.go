@@ -162,4 +162,3 @@ func NewMail(e data.EmailModel, host string, port int, username, password, sende
 func UpdateEmailTracking(e data.EmailModel, recipient string) error {
 	return e.UpdateEmail(recipient)
 }
-

@@ -33,5 +33,4 @@ func Version() string {
 		return fmt.Sprintf("%s-%s-dirty", time, revision)
 	}
 	return fmt.Sprintf("%s-%s-dirty", time, revision)
-
 }

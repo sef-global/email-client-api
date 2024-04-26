@@ -7,13 +7,11 @@ var (
 )
 
 // Define a new validator type which contains a map of validation errors.
-
 type Validator struct {
 	Errors map[string]string
 }
 
 // New is a helper which creates a new Validator instance with an empty errors map.
-
 func New() *Validator {
 	return &Validator{Errors: make(map[string]string)}
 }
@@ -39,7 +37,6 @@ func (v *Validator) Check(ok bool, key, message string) {
 }
 
 // In returns true if a specific value is in a list of strings.
-
 func In(value string, list ...string) bool {
 	for i := range list {
 		if value == list[i] {
@@ -55,7 +52,6 @@ func Matches(value string, rx *regexp.Regexp) bool {
 }
 
 // unique returns true if all string values in a slice are unique.
-
 func Unique(values []string) bool {
 	uniqueValues := make(map[string]bool)
 
@@ -64,7 +60,6 @@ func Unique(values []string) bool {
 	}
 	return len(values) == len(uniqueValues)
 }
-
 
 func PermittedValue[T comparable](value T, permittedValues ...T) bool {
 	for i := range permittedValues {
