@@ -25,12 +25,16 @@ This endpoint is used to send an email. The request body should be a JSON object
 }
 ```
 
-### POST /track  (Status : Inprogress ⏳)
+### POST /track  (Status : Completed ☑️)
 
 This endpoint is used to update the tracking status of an email. The request body should be a JSON object with the following fields:
 
 - `id`: The ID of the email to track.
 - `opened`: A boolean indicating whether the email has been opened.
+## How it works 
+
+![image](https://github.com/mayura-andrew/send-bulk-email-client-api/assets/48531182/2c5f7568-97d3-46e3-8645-35663a5b43db)
+
 
 ### GET /successfullysent (Status : Not Started ❌)
 
