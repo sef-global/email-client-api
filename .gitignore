@@ -27,4 +27,5 @@ Thumbs.db
 
 # Go API specific files
 /api/
-/swagger/
+/swagger/.envrc
+bin/

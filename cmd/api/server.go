@@ -13,11 +13,11 @@ import (
 
 func (app *application) serve() error {
 	srv := &http.Server{
-		Addr:    fmt.Sprintf(":%d", app.config.port),
-		Handler: app.routes(),
-		IdleTimeout: time.Minute,
+		Addr:         fmt.Sprintf(":%d", app.config.port),
+		Handler:      app.routes(),
+		IdleTimeout:  time.Minute,
 		WriteTimeout: 30 * time.Second,
-		ReadTimeout: 10 * time.Second,
+		ReadTimeout:  10 * time.Second,
 	}
 
 	shutdownError := make(chan error)
@@ -25,9 +25,9 @@ func (app *application) serve() error {
 	go func() {
 		quit := make(chan os.Signal, 1)
 		signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
-		s := <- quit
+		s := <-quit
 
-		app.logger.PrintInfo("shutting down server", map[string]string {
+		app.logger.PrintInfo("shutting down server", map[string]string{
 			"signal": s.String(),
 		})
 
@@ -37,9 +37,9 @@ func (app *application) serve() error {
 		shutdownError <- srv.Shutdown(ctx)
 	}()
 
-	app.logger.PrintInfo("starting server", map[string]string {
+	app.logger.PrintInfo("starting server", map[string]string{
 		"addr": srv.Addr,
-		"env": app.config.env,
+		"env":  app.config.env,
 	})
 
 	err := srv.ListenAndServe()
@@ -47,13 +47,13 @@ func (app *application) serve() error {
 		return err
 	}
 
-	err = <- shutdownError
+	err = <-shutdownError
 	if err != nil {
 		return err
 	}
 
-	app.logger.PrintInfo("stopped server", map[string]string {
-		"addr" : srv.Addr,
+	app.logger.PrintInfo("stopped server", map[string]string{
+		"addr": srv.Addr,
 	})
 	return nil
 }

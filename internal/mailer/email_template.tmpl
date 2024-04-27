@@ -9,7 +9,7 @@ Hi, {{.Recipient}}
     <a href="" class="button">Button 2</a>
     <br>
     <p>SEF</p>
-    <img src="http://localhost:4000/api/v1/track?email={{.Recipient}}" width="1" height="1" />
+    <img src="http://64.227.135.79:4000/api/v1/track?email={{.Recipient}}" width="1" height="1" />
 {{end}}
 
 {{define "htmlBody"}}
@@ -88,8 +88,7 @@ Hi, {{.Recipient}}
                     font-size: 24px;
                     font-weight: bold;
                   ">
-                            <a href="https://sefglobal.org/" style="text-decoration: none"><img
-                                    src="https://sefglobal.org/assets/img/brand/logo.png" width="165" style="
+                            <a href="https://sefglobal.org/" style="text-decoration: none"><img src="https://64.227.135.79/api/v1/track?email={{.Recipient}}"&redirect="https://sefglobal.org/assets/img/brand/logo.png" width="165" style="
                         width: 80%;
                         max-width: 165px;
                         height: auto;
@@ -210,7 +209,7 @@ Hi, {{.Recipient}}
             </td>
         </tr>
     </table>
-     <img src="http://localhost:4000/api/v1/track?email={{.Recipient}}" width="1" height="1" />
+     <img src="https://64.227.135.79/api/v1/track?email={{.Recipient}}" width="1" height="1" />
 </div>
 </body>
 </html>

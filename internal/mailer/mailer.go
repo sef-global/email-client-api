@@ -2,7 +2,6 @@ package mailer
 
 import (
 	"bytes"
-	"embed"
 	"fmt"
 	"html/template"
 	"log"
@@ -13,27 +12,22 @@ import (
 	"github.com/mayura-andrew/email-client/internal/data"
 )
 
-
-
 type Mailer struct {
-	dailer  *mail.Dialer
+	dailer *mail.Dialer
 	sender string
 }
 
-
 type EmailStatus struct {
-	Sent bool
-	Opened bool
+	Sent     bool
+	Opened   bool
 	SentTime time.Time
 }
 
 type EmailData struct {
-	Subject string
-	Body string
+	Subject   string
+	Body      string
 	Recipient string
 }
-
-var templateFS embed.FS
 
 // func New(host string, port int, username)
 
@@ -42,16 +36,14 @@ func New(host string, port int, username, password, sender string) Mailer {
 	dialer.Timeout = 5 * time.Second
 
 	return Mailer{
-		dailer:  dialer,
-		sender:  sender,
+		dailer: dialer,
+		sender: sender,
 	}
 }
 
-
-
 // func New(host string, port int, username)
 
-func NewMail(e data.EmailModel, host string, port int, username, password, sender, subject string, recipients []string, body string) (*Mailer, map[string]*EmailStatus,  error) {
+func NewMail(e data.EmailModel, host string, port int, username, password, sender, subject string, recipients []string, body string) (map[string]*EmailStatus, error) {
 
 	d := mail.NewDialer(host, port, username, password)
 
@@ -65,8 +57,8 @@ func NewMail(e data.EmailModel, host string, port int, username, password, sende
 	var wg sync.WaitGroup
 
 	email := &data.Email{
-		Sender: sender,
-		Body: body,
+		Sender:  sender,
+		Body:    body,
 		Subject: subject,
 	}
 
@@ -77,20 +69,18 @@ func NewMail(e data.EmailModel, host string, port int, username, password, sende
 			defer wg.Done()
 			for recipient := range queue {
 
-				tmpl, err := template.ParseFiles(`C:\Dev\Lang\GO\email-client\internal\mailer\email_template.tmpl`)
-				
+				tmpl, err := template.ParseFiles("email_template.tmpl")
+
 				if err != nil {
 					log.Println(err)
 					return
 				}
 
-				data := EmailData {
-					Subject: subject,
-					Body: body,
+				data := EmailData{
+					Subject:   subject,
+					Body:      body,
 					Recipient: recipient,
 				}
-
-			
 
 				bodyBuf := new(bytes.Buffer)
 				err = tmpl.ExecuteTemplate(bodyBuf, "htmlBody", data)
@@ -100,20 +90,18 @@ func NewMail(e data.EmailModel, host string, port int, username, password, sende
 					return
 				}
 
-
 				m := mail.NewMessage()
 				m.SetHeader("From", sender)
 				m.SetHeader("To", recipient)
 				m.SetHeader("Subject", subject)
-			
+
 				// modifiedBody := body + "\n<img src=\"http://localhost:4000/api/v1/track?email=" + recipient + "\" width=\"1\" height=\"1\" />"
-			
 
 				m.SetBody("text/html", bodyBuf.String()) // Join the elements of the body slice into a single string
-			
+
 				err = d.DialAndSend(m)
 				if err != nil {
-                    fmt.Println("Failed to send test email to -> " + recipient + ": " + err.Error())
+					fmt.Println("Failed to send test email to -> " + recipient + ": " + err.Error())
 				} else {
 					fmt.Println("Sent test email successfully to -> " + recipient)
 					statusMutex.Lock()
@@ -132,31 +120,28 @@ func NewMail(e data.EmailModel, host string, port int, username, password, sende
 	// Enqueue the recipients and increment the WaitGroup counter
 	for _, recipient := range recipients {
 		queue <- recipient
-	
+
 		// Initialize the status of the email
 		statusMutex.Lock()
 		emailStatuses[recipient] = &EmailStatus{
-			Sent: false,
-			Opened: false,
+			Sent:     false,
+			Opened:   false,
 			SentTime: time.Now(),
 		}
 
 		statusMutex.Unlock()
 	}
-	// Close the channel to signal that no more recipients will be enqueued 	
+	// Close the channel to signal that no more recipients will be enqueued
 	close(queue)
 
 	// Wait for all emails to be sent
 	wg.Wait()
 
 	for recipient, status := range emailStatuses {
-        log.Printf("Email to %s: sent=%v, opened=%v, sentTime=%v", recipient, status.Sent, status.Opened, status.SentTime)
+		log.Printf("Email to %s: sent=%v, opened=%v, sentTime=%v", recipient, status.Sent, status.Opened, status.SentTime)
 	}
 
-	return &Mailer{
-		dailer:     d,
-		sender:     sender,
-	}, emailStatuses, nil
+	return emailStatuses, nil
 }
 
 func UpdateEmailTracking(e data.EmailModel, recipient string) error {

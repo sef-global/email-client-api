@@ -14,6 +14,7 @@ import (
 	"strings"
 	"time"
 
+	// "github.com/joho/godotenv"
 	"github.com/joho/godotenv"
 	_ "github.com/lib/pq"
 	"github.com/mayura-andrew/email-client/internal/data"
@@ -22,23 +23,23 @@ import (
 	"github.com/mayura-andrew/email-client/internal/vcs"
 )
 
-var (version1 = vcs.Version())
-
-const version = "1.0.0"
+var (
+	version = vcs.Version()
+)
 
 type config struct {
 
 	// API SERVER - configurations
 	port int
-	env string
+	env  string
 
 	// SMTP - configurations
 	smtp struct {
-		host string
-		port int
+		host     string
+		port     int
 		username string
 		password string
-		sender string
+		sender   string
 	}
 
 	cors struct {
@@ -46,15 +47,15 @@ type config struct {
 	}
 
 	db struct {
-		dsn string
+		dsn          string
 		maxOpenConns int
 		maxIdleConns int
-		maxIdleTime string
+		maxIdleTime  string
 	}
 
 	limiter struct {
-		rps float64 // request-per-second
-		burst int
+		rps     float64 // request-per-second
+		burst   int
 		enabled bool
 	}
 }
@@ -65,18 +66,19 @@ type application struct {
 	logger *jsonlog.Logger
 	models data.Models
 }
+
 func main() {
 	var cfg config
 
 	err := godotenv.Load(".env")
-    if err != nil {
-        log.Fatalf("Error loading environment variables file")
-    }
+	if err != nil {
+		log.Fatalf("Error loading environment variables file")
+	}
 
 	flag.IntVar(&cfg.port, "port", 4000, "Email API Server Port")
 	flag.StringVar(&cfg.env, "env", "development", "Environment (development|statging|production)")
-	flag.StringVar(&cfg.db.dsn, "db-dsn", "postgres://andrew:OslpJueINuYbKRmc7UvNRjyqZ7bV1Byq@dpg-cogkfq21hbls738s5lm0-a.singapore-postgres.render.com/emailbulk?",
-	"PostgreSQL DSN")
+	flag.StringVar(&cfg.db.dsn, "db-dsn", os.Getenv("EMAILAPI"),
+		"PostgreSQL DSN")
 
 	flag.IntVar(&cfg.db.maxOpenConns, "db-max-open-conns", 25, "PostgreSQL max open connections")
 	flag.IntVar(&cfg.db.maxIdleConns, "db-max-idle-conns", 25, "PostgreSQL max idle connections")
@@ -85,7 +87,6 @@ func main() {
 	flag.Float64Var(&cfg.limiter.rps, "limiter-rps", 2, "Rate limiter maximum requests per second")
 	flag.IntVar(&cfg.limiter.burst, "limiter-burst", 4, "Rate limiter maximum burst")
 	flag.BoolVar(&cfg.limiter.enabled, "limiter-enabled", true, "Enable rate limiter")
-
 
 	envVarValue := os.Getenv("SMTPPORT")
 
@@ -99,20 +100,18 @@ func main() {
 		fmt.Println("Error conversting environment variable to integer:", err)
 		return
 	}
-	fmt.Printf("%d", intValue)
 
 	smtpSender, err := url.QueryUnescape(os.Getenv("SMTPSENDER"))
 	if err != nil {
 		log.Fatalf("Failed to decore the SMTPSENDER : %v", err)
 	}
 
-	fmt.Printf("%s", smtpSender)
-	flag.StringVar(&cfg.smtp.host, "smtp-host", os.Getenv("SMTPHOST"), "SMTP host")
+	flag.StringVar(&cfg.smtp.host, "SMTPHOST", os.Getenv("SMTPHOST"), "SMTP host")
 	flag.IntVar(&cfg.smtp.port, "SMTPPORT", intValue, "SMTP port")
-	flag.StringVar(&cfg.smtp.username, "smtp-username", os.Getenv("SMTPUSERNAME"), "SMTP username")
-	flag.StringVar(&cfg.smtp.password, "smtp-password", os.Getenv("SMTPPASS"), "SMTP password")
+	flag.StringVar(&cfg.smtp.username, "SMTPUSERNAME", os.Getenv("SMTPUSERNAME"), "SMTP username")
+	flag.StringVar(&cfg.smtp.password, "SMTPPASS",
+	 os.Getenv("SMTPPASS"), "SMTP password")
 	flag.StringVar(&cfg.smtp.sender, "SMTPSENDER", smtpSender, "SMTP sender")
-
 
 	flag.Func("cors-trusted-origins", "Trusted CORS origins (space separated)", func(val string) error {
 		cfg.cors.trustedOrigns = strings.Fields(val)
@@ -154,14 +153,13 @@ func main() {
 		mailer: mailer.New(cfg.smtp.host, cfg.smtp.port, cfg.smtp.username, cfg.smtp.password, cfg.smtp.sender),
 		models: data.NewModel(db),
 	}
-	
+
 	err = app.serve()
 	if err != nil {
 		logger.PrintFatal(err, nil)
 	}
 
 }
-
 
 func openDB(cfg config) (*sql.DB, error) {
 
@@ -179,7 +177,6 @@ func openDB(cfg config) (*sql.DB, error) {
 	}
 
 	db.SetConnMaxIdleTime(duration)
-
 
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()

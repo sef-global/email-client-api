@@ -5,13 +5,12 @@ import (
 	"errors"
 	"fmt"
 	"github.com/julienschmidt/httprouter"
+	"github.com/mayura-andrew/email-client/internal/validator"
 	"io"
 	"net/http"
 	"net/url"
 	"strconv"
 	"strings"
-	"github.com/mayura-andrew/email-client/internal/validator"
-
 )
 
 // define an envelope type

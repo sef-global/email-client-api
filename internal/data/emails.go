@@ -11,24 +11,24 @@ import (
 )
 
 type Email struct {
-	ID int64 `json:"id"`
-	CreatedAt time.Time `json:"-"`
-	Sender string `json:"sender"`
-	Recipients []string `json:"recipients,omitempty"`
-	Body string `json:"body"`  
-	Subject string `json:"Subject"`
+	ID         int64     `json:"id"`
+	CreatedAt  time.Time `json:"-"`
+	Sender     string    `json:"sender"`
+	Recipients []string  `json:"recipients,omitempty"`
+	Body       string    `json:"body"`
+	Subject    string    `json:"Subject"`
 }
 
 type EmailRecipient struct {
-	ID int64 `json:"id"`
-	CreatedAt time.Time `json:"createdAt"`
-	Sender string `json:"sender"`
-	Recipient string `json:"recipients"`
-	Body string `json:"body"`  
-	Subject string `json:"subject"`
-	Status string `json:"status"`
-	SentTime time.Time `json:"sentTime"`
-	Opened string `json:"opened"`
+	ID         int64          `json:"id"`
+	CreatedAt  time.Time      `json:"createdAt"`
+	Sender     string         `json:"sender"`
+	Recipient  string         `json:"recipients"`
+	Body       string         `json:"body"`
+	Subject    string         `json:"subject"`
+	Status     string         `json:"status"`
+	SentTime   time.Time      `json:"sentTime"`
+	Opened     string         `json:"opened"`
 	OpenedTime CustomNullTime `json:"openedTime"`
 }
 
@@ -76,14 +76,13 @@ func (e EmailModel) InsertEmailRecipient(email *Email, recipient string, isSent 
 	ctx, cancle := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancle()
 
-
 	return e.DB.QueryRowContext(ctx, query, args...).Scan(&email.ID, &recipient, &isSent, &sentTime, false)
 }
 
 func (e EmailModel) Get(recipient string) (*EmailRecipient, error) {
 	if len(recipient) < 1 {
 		return nil, ErrRecordNotFound
-	} 
+	}
 	query := `SELECT recipients.id, recipients.recipient, recipients.status, recipients.sent_time, recipients.opened, recipients.opened_time, emails.created_at, emails.sender, emails.body, emails.subject FROM recipients JOIN emails ON recipients.email_id = emails.id 
 	WHERE recipients.recipient = $1;`
 
@@ -91,7 +90,7 @@ func (e EmailModel) Get(recipient string) (*EmailRecipient, error) {
 
 	ctx, cancle := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancle()
-	
+
 	err := e.DB.QueryRowContext(ctx, query, recipient).Scan(&email.ID, &email.Recipient, &email.Status, &email.SentTime, &email.Opened, &email.OpenedTime, &email.CreatedAt, &email.Sender, &email.Body, &email.Subject)
 
 	if err != nil {
@@ -99,7 +98,7 @@ func (e EmailModel) Get(recipient string) (*EmailRecipient, error) {
 		case errors.Is(err, sql.ErrNoRows):
 			return nil, ErrRecordNotFound
 		default:
-		return nil, err
+			return nil, err
 		}
 	}
 	return &email, nil
@@ -109,7 +108,6 @@ func (e EmailModel) UpdateEmail(recipient string) error {
 	query := `UPDATE recipients SET opened = true, opened_time = $1 WHERE recipient = $2`
 
 	args := []any{time.Now(), recipient}
-
 
 	_, err := e.DB.Exec(query, args...)
 	return err

@@ -10,11 +10,12 @@ import (
 // summary: The root endpoint of the API.
 // description: This will show all available API endpoints.
 // responses:
-//   '200':
-//     description: Successfully retrieved list of API endpoints.
+//
+//	'200':
+//	  description: Successfully retrieved list of API endpoints.
 func (app *application) rootHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "text/html")
-    fmt.Fprint(w, `
+	fmt.Fprint(w, `
 	<!DOCTYPE html>
 	<html>
 	<head>

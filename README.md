@@ -45,7 +45,7 @@ Searches for emails based on certain criteria. Accepts the following query param
 - `sent`: A boolean indicating whether to search for emails that have been sent (`true`) or not sent (`false`).
 - `opened`: A boolean indicating whether to search for emails that have been opened (`true`) or not opened (`false`).
 
-## Email Template  (Status : Inprogress ⏳)
+## Email Template  (Status : Status : Completed ☑️)
 
 The email content is generated from a Go template file, `email_template.tmpl`. This file defines two templates, `subject` and `plainBody`, which are used to generate the subject and body of the email, respectively. The templates have access to the following data:
 

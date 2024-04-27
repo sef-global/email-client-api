@@ -14,48 +14,47 @@ import (
 	"github.com/mayura-andrew/email-client/internal/validator"
 )
 
-
 type Mailer struct {
-	dailer  *mail.Dialer
+	dailer *mail.Dialer
 	sender string
 }
 
 type EmailStatus struct {
-	Sent bool
-	Opened bool
+	Sent     bool
+	Opened   bool
 	SentTime time.Time
 }
 
 func (app *application) sendEmailHandler(w http.ResponseWriter, r *http.Request) {
-    // Parse the request body
-    var req struct {
-        Sender     string   `json:"sender"`
-        Recipients []string `json:"recipients"`
-		Subject string `json:"subject"`
-        Body       string   `json:"body"`
-    }
+	// Parse the request body
+	var req struct {
+		Sender     string   `json:"sender"`
+		Recipients []string `json:"recipients"`
+		Subject    string   `json:"subject"`
+		Body       string   `json:"body"`
+	}
 
-	err := app.readJSON(w, r, &req) 
+	err := app.readJSON(w, r, &req)
 	if err != nil {
 		app.badRequestResponse(w, r, err)
 		return
 	}
 
-	email := &data.Email {
-		Sender: req.Sender,
+	email := &data.Email{
+		Sender:     req.Sender,
 		Recipients: req.Recipients,
-		Subject: req.Subject,
-		Body: req.Body,
+		Subject:    req.Subject,
+		Body:       req.Body,
 	}
 
 	v := validator.New()
-	
+
 	if data.ValidateEmail(v, email); !v.Valid() {
 		app.failedValidationResponse(w, r, v.Errors)
 		return
 	}
 
-	_, emailStatus, err := mailer.NewMail(app.models.Emails, app.config.smtp.host, app.config.smtp.port, app.config.smtp.username, app.config.smtp.password, req.Sender, req.Subject, req.Recipients, req.Body)
+	emailStatus, err := mailer.NewMail(app.models.Emails, app.config.smtp.host, app.config.smtp.port, app.config.smtp.username, app.config.smtp.password, req.Sender, req.Subject, req.Recipients, req.Body)
 	if err != nil {
 		http.Error(w, "Failed to send email", http.StatusInternalServerError)
 		return
@@ -69,7 +68,6 @@ func (app *application) sendEmailHandler(w http.ResponseWriter, r *http.Request)
 		app.serverErrorRespone(w, r, err)
 	}
 }
-
 
 // email tracking
 func (app *application) track(w http.ResponseWriter, r *http.Request) {
@@ -87,15 +85,13 @@ func (app *application) track(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte("GIF89a\x01\x00\x01\x00\x80\x00\x00\xff\xff\xff\xff\xff\xff,\x00\x00\x00\x00\x01\x00\x01\x00\x00\x02\x02D\x01\x00;"))
 }
 
-
 func (app *application) showEmailHandler(w http.ResponseWriter, r *http.Request) {
 
-    recipient := path.Base(r.URL.Path)
-    if recipient == ""{
-        app.notFoundResponse(w, r)
-        return
-    }
-
+	recipient := path.Base(r.URL.Path)
+	if recipient == "" {
+		app.notFoundResponse(w, r)
+		return
+	}
 
 	details, err := app.models.Emails.Get(recipient)
 	if err != nil {
