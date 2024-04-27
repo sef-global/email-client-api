@@ -9,7 +9,7 @@ This API provides functionality for sending, tracking, and querying emails.
 
 ## Endpoints
 
-### POST /sendemail (Status : Completed ☑️)
+### POST /send (Status : Completed ☑️)
 
 Sends an email. The request body should be a JSON object with the following fields:
 
@@ -17,7 +17,7 @@ Sends an email. The request body should be a JSON object with the following fiel
 - `subject`: The subject of the email.
 - `body`: The body of the email.
 
-### POST /trackemail  (Status : Inprogress ⏳)
+### POST /track  (Status : Inprogress ⏳)
 
 Updates the tracking status of an email. The request body should be a JSON object with the following fields:
 
