@@ -64,5 +64,3 @@ The content of the emails is generated from a Go template file, `email_template.
 - `Subject`: The subject of the email.
 - `Body`: The body of the email.
 - `Recipient`: The email address of the recipient.
-
-The `plainBody` template also includes a tracking pixel, which calls the `/track` endpoint when the email is opened. This allows the API to track when emails are opened.
