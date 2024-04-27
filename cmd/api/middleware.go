@@ -13,12 +13,12 @@ import (
 func (app *application) rateLimit(next http.Handler) http.Handler {
 
 	type client struct {
-		limiter *rate.Limiter
+		limiter  *rate.Limiter
 		lastSeen time.Time
 	}
 
 	var (
-		mu sync.Mutex
+		mu      sync.Mutex
 		clients = make(map[string]*client)
 	)
 
@@ -27,7 +27,7 @@ func (app *application) rateLimit(next http.Handler) http.Handler {
 			time.Sleep(time.Minute)
 
 			mu.Lock()
-			
+
 			for ip, client := range clients {
 				if time.Since(client.lastSeen) > 3*time.Minute {
 					delete(clients, ip)
@@ -38,19 +38,18 @@ func (app *application) rateLimit(next http.Handler) http.Handler {
 	}()
 
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		
+
 		if app.config.limiter.enabled {
-				ip, _, err := net.SplitHostPort(r.RemoteAddr)
-				if err != nil {
-					app.serverErrorRespone(w, r, err)
-					return
-				}
-			
+			ip, _, err := net.SplitHostPort(r.RemoteAddr)
+			if err != nil {
+				app.serverErrorRespone(w, r, err)
+				return
+			}
 
 			mu.Lock()
 
 			if _, found := clients[ip]; !found {
-				clients[ip] = & client{
+				clients[ip] = &client{
 					limiter: rate.NewLimiter(rate.Limit(app.config.limiter.rps), app.config.limiter.burst),
 				}
 			}

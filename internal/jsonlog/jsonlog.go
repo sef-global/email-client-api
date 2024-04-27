@@ -11,14 +11,12 @@ import (
 
 type Level int8
 
-
 const (
 	LevelInfo  Level = iota // has the value 0
 	LevelError              // has the value 1.
 	LevelFatal              // has the value 2
 	LevelOff                // has the value 3
 )
-
 
 func (l Level) String() string {
 	switch l {

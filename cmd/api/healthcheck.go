@@ -17,4 +17,3 @@ func (app *application) healthcheckHandler(w http.ResponseWriter, r *http.Reques
 		app.serverErrorRespone(w, r, err)
 	}
 }
-    

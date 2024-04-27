@@ -6,6 +6,7 @@ import (
 	"log"
 	"net/http"
 	"path"
+	"strconv"
 	"time"
 
 	"github.com/go-mail/mail/v2"
@@ -14,48 +15,47 @@ import (
 	"github.com/mayura-andrew/email-client/internal/validator"
 )
 
-
 type Mailer struct {
-	dailer  *mail.Dialer
+	dailer *mail.Dialer
 	sender string
 }
 
 type EmailStatus struct {
-	Sent bool
-	Opened bool
+	Sent     bool
+	Opened   bool
 	SentTime time.Time
 }
 
 func (app *application) sendEmailHandler(w http.ResponseWriter, r *http.Request) {
-    // Parse the request body
-    var req struct {
-        Sender     string   `json:"sender"`
-        Recipients []string `json:"recipients"`
-		Subject string `json:"subject"`
-        Body       string   `json:"body"`
-    }
+	// Parse the request body
+	var req struct {
+		Sender     string   `json:"sender"`
+		Recipients []string `json:"recipients"`
+		Subject    string   `json:"subject"`
+		Body       string   `json:"body"`
+	}
 
-	err := app.readJSON(w, r, &req) 
+	err := app.readJSON(w, r, &req)
 	if err != nil {
 		app.badRequestResponse(w, r, err)
 		return
 	}
 
-	email := &data.Email {
-		Sender: req.Sender,
+	email := &data.Email{
+		Sender:     req.Sender,
 		Recipients: req.Recipients,
-		Subject: req.Subject,
-		Body: req.Body,
+		Subject:    req.Subject,
+		Body:       req.Body,
 	}
 
 	v := validator.New()
-	
+
 	if data.ValidateEmail(v, email); !v.Valid() {
 		app.failedValidationResponse(w, r, v.Errors)
 		return
 	}
 
-	_, emailStatus, err := mailer.NewMail(app.models.Emails, app.config.smtp.host, app.config.smtp.port, app.config.smtp.username, app.config.smtp.password, req.Sender, req.Subject, req.Recipients, req.Body)
+	emailStatus, err := mailer.NewMail(app.models.Emails, app.config.smtp.host, app.config.smtp.port, app.config.smtp.username, app.config.smtp.password, req.Sender, req.Subject, req.Recipients, req.Body)
 	if err != nil {
 		http.Error(w, "Failed to send email", http.StatusInternalServerError)
 		return
@@ -70,32 +70,39 @@ func (app *application) sendEmailHandler(w http.ResponseWriter, r *http.Request)
 	}
 }
 
-
 // email tracking
 func (app *application) track(w http.ResponseWriter, r *http.Request) {
-	email := r.URL.Query().Get("email")
-	if email == "" {
-		http.Error(w, "Missing email parameter", http.StatusBadRequest)
+	id := r.URL.Query().Get("id")
+	if id == "" {
+		http.Error(w, "Missing id parameter", http.StatusBadRequest)
 		return
 	}
-	log.Printf("Email opened: %s", email)
-	err := mailer.UpdateEmailTracking(app.models.Emails, email)
-	if err != nil {
-		log.Printf("failded to update email tracking: %v", err)
-	}
-	w.Header().Set("Content-Type", "image/gif")
-	w.Write([]byte("GIF89a\x01\x00\x01\x00\x80\x00\x00\xff\xff\xff\xff\xff\xff,\x00\x00\x00\x00\x01\x00\x01\x00\x00\x02\x02D\x01\x00;"))
-}
+	
+	log.Printf("Email opened: %s", id)
 
+	emailID, err := strconv.Atoi(id)
+	if err != nil {
+		log.Printf("Invalid email ID: %v", err)
+		http.Error(w, "Invalid email parameter", http.StatusBadRequest)
+		return
+	}
+
+	err = mailer.UpdateEmailTracking(app.models.Emails, emailID)
+	if err != nil {
+		log.Printf("Failed to update email tracking: %v", err)
+		http.Error(w, "Internal server error", http.StatusInternalServerError)
+	}
+	redirectURL := "https://scholarx.sefglobal.org"
+	http.Redirect(w, r, redirectURL, http.StatusFound)
+}
 
 func (app *application) showEmailHandler(w http.ResponseWriter, r *http.Request) {
 
-    recipient := path.Base(r.URL.Path)
-    if recipient == ""{
-        app.notFoundResponse(w, r)
-        return
-    }
-
+	recipient := path.Base(r.URL.Path)
+	if recipient == "" {
+		app.notFoundResponse(w, r)
+		return
+	} 
 
 	details, err := app.models.Emails.Get(recipient)
 	if err != nil {
