@@ -5,7 +5,7 @@
 
 This API is developed for the ScholarX platform to handle the sending, and querying of emails. It provides several endpoints for these operations. Visit here [https://sefglobal.org/].
 
-Running API URL := https://mature-walleye-gratefully.ngrok-free.app/
+Running API URL := (https://64.227.135.79/)
 ## Endpoints
 
 ### POST /send (Status : Completed ☑️)
