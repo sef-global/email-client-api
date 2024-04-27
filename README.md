@@ -3,7 +3,7 @@
 ![Email API](https://github.com/mayura-andrew/send-bulk-email-client-api/assets/48531182/243b444d-9284-4008-be17-f678fe602c75)
 
 
-This API is developed for the ScholarX platform to handle the sending, tracking, and querying of emails. It provides several endpoints for these operations. You can access the API at [https://sefglobal.org/].
+This API is developed for the ScholarX platform to handle the sending, and querying of emails. It provides several endpoints for these operations. Visit here [https://sefglobal.org/].
 
 Running API URL := https://mature-walleye-gratefully.ngrok-free.app/api/v1/healthcheck
 ## Endpoints
