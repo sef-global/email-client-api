@@ -5,7 +5,7 @@
 
 This API is developed for the ScholarX platform to handle the sending, tracking, and querying of emails. It provides several endpoints for these operations. You can access the API at [https://sefglobal.org/].
 
-
+Running API URL := https://mature-walleye-gratefully.ngrok-free.app/api/v1/healthcheck
 ## Endpoints
 
 ### POST /send (Status : Completed ☑️)
