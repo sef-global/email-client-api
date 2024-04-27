@@ -12,6 +12,7 @@ import (
 	"github.com/mayura-andrew/email-client/internal/data"
 )
 
+
 type Mailer struct {
 	dailer *mail.Dialer
 	sender string
@@ -27,9 +28,8 @@ type EmailData struct {
 	Subject   string
 	Body      string
 	Recipient string
+	EmailId int
 }
-
-// func New(host string, port int, username)
 
 func New(host string, port int, username, password, sender string) Mailer {
 	dialer := mail.NewDialer(host, port, username, password)
@@ -51,9 +51,8 @@ func NewMail(e data.EmailModel, host string, port int, username, password, sende
 
 	var statusMutex sync.Mutex
 
-	// create a channel to queue the recipients
 	queue := make(chan string)
-	// create an WaitGroup to wait for all emails to be sent
+
 	var wg sync.WaitGroup
 
 	email := &data.Email{
@@ -69,8 +68,14 @@ func NewMail(e data.EmailModel, host string, port int, username, password, sende
 			defer wg.Done()
 			for recipient := range queue {
 
-				tmpl, err := template.ParseFiles("email_template.tmpl")
+				tmpl, err := template.ParseFiles("internal/mailer/email_template.tmpl")
 
+				if err != nil {
+					log.Println(err)
+					return
+				}
+
+				emailId, err := e.InsertEmail(email, recipient)
 				if err != nil {
 					log.Println(err)
 					return
@@ -80,6 +85,7 @@ func NewMail(e data.EmailModel, host string, port int, username, password, sende
 					Subject:   subject,
 					Body:      body,
 					Recipient: recipient,
+					EmailId: emailId,
 				}
 
 				bodyBuf := new(bytes.Buffer)
@@ -94,12 +100,10 @@ func NewMail(e data.EmailModel, host string, port int, username, password, sende
 				m.SetHeader("From", sender)
 				m.SetHeader("To", recipient)
 				m.SetHeader("Subject", subject)
-
-				// modifiedBody := body + "\n<img src=\"http://localhost:4000/api/v1/track?email=" + recipient + "\" width=\"1\" height=\"1\" />"
-
-				m.SetBody("text/html", bodyBuf.String()) // Join the elements of the body slice into a single string
+				m.SetBody("text/html", bodyBuf.String()) 
 
 				err = d.DialAndSend(m)
+
 				if err != nil {
 					fmt.Println("Failed to send test email to -> " + recipient + ": " + err.Error())
 				} else {
@@ -107,7 +111,7 @@ func NewMail(e data.EmailModel, host string, port int, username, password, sende
 					statusMutex.Lock()
 					emailStatuses[recipient].Sent = true
 					statusMutex.Unlock()
-					err := e.InsertEmail(email, recipient, emailStatuses[recipient].Sent, emailStatuses[recipient].SentTime)
+					err := e.UpdateEmailStatus(emailId)
 					if err != nil {
 						log.Println(err)
 						return
@@ -144,6 +148,6 @@ func NewMail(e data.EmailModel, host string, port int, username, password, sende
 	return emailStatuses, nil
 }
 
-func UpdateEmailTracking(e data.EmailModel, recipient string) error {
-	return e.UpdateEmail(recipient)
+func UpdateEmailTracking(e data.EmailModel, emailid int) error {
+	return e.UpdateEmail(emailid)
 }

@@ -6,6 +6,7 @@ import (
 	"log"
 	"net/http"
 	"path"
+	"strconv"
 	"time"
 
 	"github.com/go-mail/mail/v2"
@@ -71,18 +72,28 @@ func (app *application) sendEmailHandler(w http.ResponseWriter, r *http.Request)
 
 // email tracking
 func (app *application) track(w http.ResponseWriter, r *http.Request) {
-	email := r.URL.Query().Get("email")
-	if email == "" {
-		http.Error(w, "Missing email parameter", http.StatusBadRequest)
+	id := r.URL.Query().Get("id")
+	if id == "" {
+		http.Error(w, "Missing id parameter", http.StatusBadRequest)
 		return
 	}
-	log.Printf("Email opened: %s", email)
-	err := mailer.UpdateEmailTracking(app.models.Emails, email)
+	
+	log.Printf("Email opened: %s", id)
+
+	emailID, err := strconv.Atoi(id)
 	if err != nil {
-		log.Printf("failded to update email tracking: %v", err)
+		log.Printf("Invalid email ID: %v", err)
+		http.Error(w, "Invalid email parameter", http.StatusBadRequest)
+		return
 	}
-	w.Header().Set("Content-Type", "image/gif")
-	w.Write([]byte("GIF89a\x01\x00\x01\x00\x80\x00\x00\xff\xff\xff\xff\xff\xff,\x00\x00\x00\x00\x01\x00\x01\x00\x00\x02\x02D\x01\x00;"))
+
+	err = mailer.UpdateEmailTracking(app.models.Emails, emailID)
+	if err != nil {
+		log.Printf("Failed to update email tracking: %v", err)
+		http.Error(w, "Internal server error", http.StatusInternalServerError)
+	}
+	redirectURL := "https://scholarx.sefglobal.org"
+	http.Redirect(w, r, redirectURL, http.StatusFound)
 }
 
 func (app *application) showEmailHandler(w http.ResponseWriter, r *http.Request) {
@@ -91,7 +102,7 @@ func (app *application) showEmailHandler(w http.ResponseWriter, r *http.Request)
 	if recipient == "" {
 		app.notFoundResponse(w, r)
 		return
-	}
+	} 
 
 	details, err := app.models.Emails.Get(recipient)
 	if err != nil {

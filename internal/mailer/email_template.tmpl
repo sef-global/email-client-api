@@ -9,7 +9,7 @@ Hi, {{.Recipient}}
     <a href="" class="button">Button 2</a>
     <br>
     <p>SEF</p>
-    <img src="http://64.227.135.79:4000/api/v1/track?email={{.Recipient}}" width="1" height="1" />
+    <img src="http://64.227.135.79:4000/api/v1/track?id={{.EmailID}}" width="1" height="1" />
 {{end}}
 
 {{define "htmlBody"}}
@@ -88,7 +88,7 @@ Hi, {{.Recipient}}
                     font-size: 24px;
                     font-weight: bold;
                   ">
-                            <a href="https://sefglobal.org/" style="text-decoration: none"><img src="https://64.227.135.79/api/v1/track?email={{.Recipient}}"&redirect="https://sefglobal.org/assets/img/brand/logo.png" width="165" style="
+                            <a href="https://sefglobal.org/assets/img/brand/logo.png" width="165" style="
                         width: 80%;
                         max-width: 165px;
                         height: auto;
@@ -120,7 +120,7 @@ Hi, {{.Recipient}}
                     <p style="margin-top: 0; margin-bottom: 22px">
                                  Dear {{.Recipient}}
                                 </p>
-                                <p style="margin-top: 0; margin-bottom: 22px">
+                                <p style="margin-top: 0; margin-bottom:22px">
                                     {{.Body}}
                                 </p>
                                 <p style="margin-top: 0; margin-bottom: 18px">
@@ -129,7 +129,7 @@ Hi, {{.Recipient}}
                                     Sustainable Education Foundation.
                                 </p>
                                 <p style="margin: 0" th:if="${showButton}">
-                                    <a href="https://scholarx.sefglobal.org/" style="
+                                    <a href="https://mature-walleye-gratefully.ngrok-free.app/api/v1/redirect?id={{.EmailId}}" style="
                           background: #1890ff;
                           text-decoration: none;
                           padding: 10px 25px;
@@ -151,7 +151,7 @@ Hi, {{.Recipient}}
                           mso-padding-alt: 0;
                           text-underline-color: #6dca65;
                         ">
-                                        <span style="mso-text-raise: 10pt; font-weight: bold">Join our Slack</span>
+                                        <span style="mso-temailext-raise: 10pt; font-weight: bold">Join our Slack</span>
                                     </a>
                                 </p>
                             </div>
@@ -209,7 +209,7 @@ Hi, {{.Recipient}}
             </td>
         </tr>
     </table>
-     <img src="https://64.227.135.79/api/v1/track?email={{.Recipient}}" width="1" height="1" />
+     <img src="https://mature-walleye-gratefully.ngrok-free.app/api/v1/track?email={{.Recipient}}" width="1" height="1" />
 </div>
 </body>
 </html>

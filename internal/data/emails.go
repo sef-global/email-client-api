@@ -41,14 +41,14 @@ func ValidateEmail(v *validator.Validator, email *Email) {
 	v.Check(len(email.Sender) >= 1, "sender", "must be more than 1 bytes long")
 	v.Check(len(email.Recipients) != 0, "recipients", "must be provided")
 	v.Check(len(email.Recipients) >= 1, "recipients", "must contain more than 1 recipient emails")
-	v.Check(validator.Unique(email.Recipients), "recipients", "must not contain duplicate recipient emails")
+	// v.Check(validator.Unique(email.Recipients), "recipients", "must not contain duplicate recipient emails")
 	v.Check(email.Subject != "", "subject", "must be provided")
 	v.Check(len(email.Subject) >= 1, "sender", "must be more than 1 bytes long")
 	v.Check(email.Body != "", "body", "must be provided")
 	v.Check(len(email.Body) >= 1, "body", "must be more than 1 bytes long")
 }
 
-func (e EmailModel) InsertEmail(email *Email, recipient string, isSent bool, sentTime time.Time) error {
+func (e EmailModel) InsertEmail(email *Email, recipient string) (int, error) {
 	query := `INSERT INTO emails (sender, body, subject) VALUES ($1, $2, $3) RETURNING id, created_at`
 
 	args := []any{email.Sender, email.Body, email.Subject}
@@ -56,42 +56,45 @@ func (e EmailModel) InsertEmail(email *Email, recipient string, isSent bool, sen
 	err := e.DB.QueryRow(query, args...).Scan(&email.ID, &email.CreatedAt)
 
 	if err != nil {
-		return err
+		return 0, err
 	}
-	err = e.InsertEmailRecipient(email, recipient, isSent, sentTime)
+	emailID, err := e.InsertEmailRecipient(email, recipient)
 	if err != nil {
 		log.Println(err)
 	}
 
-	return nil
+	return emailID, nil
 }
 
-func (e EmailModel) InsertEmailRecipient(email *Email, recipient string, isSent bool, sentTime time.Time) error {
+func (e EmailModel) InsertEmailRecipient(email *Email, recipient string) (int, error) {
 
 	query := `INSERT INTO recipients (email_id, recipient, status, sent_time, opened)
-	VALUES ($1, $2, $3, $4, $5)`
+	VALUES ($1, $2, $3, $4, $5) RETURNING id`
 
-	args := []any{email.ID, recipient, isSent, sentTime, false}
+	args := []any{email.ID, recipient, false, time.Now(), false}
 
 	ctx, cancle := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancle()
-
-	return e.DB.QueryRowContext(ctx, query, args...).Scan(&email.ID, &recipient, &isSent, &sentTime, false)
+	var id int
+	err := e.DB.QueryRowContext(ctx, query, args...).Scan(&id)
+	if err != nil {
+		return 0, err
+	}
+	return id, nil
 }
 
-func (e EmailModel) Get(recipient string) (*EmailRecipient, error) {
+func (e EmailModel) Get(recipient string) (*[]EmailRecipient, error) {
 	if len(recipient) < 1 {
 		return nil, ErrRecordNotFound
 	}
 	query := `SELECT recipients.id, recipients.recipient, recipients.status, recipients.sent_time, recipients.opened, recipients.opened_time, emails.created_at, emails.sender, emails.body, emails.subject FROM recipients JOIN emails ON recipients.email_id = emails.id 
 	WHERE recipients.recipient = $1;`
 
-	var email EmailRecipient
 
 	ctx, cancle := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancle()
 
-	err := e.DB.QueryRowContext(ctx, query, recipient).Scan(&email.ID, &email.Recipient, &email.Status, &email.SentTime, &email.Opened, &email.OpenedTime, &email.CreatedAt, &email.Sender, &email.Body, &email.Subject)
+	rows, err := e.DB.QueryContext(ctx, query, recipient)
 
 	if err != nil {
 		switch {
@@ -101,18 +104,41 @@ func (e EmailModel) Get(recipient string) (*EmailRecipient, error) {
 			return nil, err
 		}
 	}
-	return &email, nil
+	defer rows.Close()
+
+	var details []EmailRecipient
+	
+	for rows.Next() {
+		d := EmailRecipient{}
+	    err = rows.Scan(&d.ID, &d.Recipient, &d.Status, &d.SentTime, &d.Opened, &d.OpenedTime, &d.CreatedAt, &d.Sender, &d.Body, &d.Subject)
+		if err != nil {
+			return nil, err
+		}
+		details = append(details, d)
+	}
+
+	if err = rows.Err(); err != nil {
+		return nil, err
+	}
+
+	return &details, nil
 }
 
-func (e EmailModel) UpdateEmail(recipient string) error {
-	query := `UPDATE recipients SET opened = true, opened_time = $1 WHERE recipient = $2`
+func (e EmailModel) UpdateEmail(id int) error {
+	query := `UPDATE recipients SET opened = true, opened_time = $1 WHERE id = $2`
 
-	args := []any{time.Now(), recipient}
+	args := []any{time.Now(), id}
 
 	_, err := e.DB.Exec(query, args...)
 	return err
 }
 
-func (e EmailModel) Delete(id int64) error {
-	return nil
+func (e EmailModel) UpdateEmailStatus(id int) error {
+
+	query := `UPDATE recipients SET status = true , sent_time = $1 WHERE id = $2`
+
+	args := []any{time.Now(), id}
+
+	_, err := e.DB.Exec(query, args...)
+	return err
 }
