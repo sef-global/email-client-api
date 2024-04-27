@@ -29,3 +29,5 @@ Thumbs.db
 /api/
 /swagger/.envrc
 bin/
+
+.envrc
