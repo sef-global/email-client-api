@@ -21,5 +21,5 @@ func (app *application) routes() http.Handler {
 	router.HandlerFunc(http.MethodGet, "/api/v1/redirect", app.track)
 	router.HandlerFunc(http.MethodGet, "/api/v1/recipients/:email", app.showEmailHandler)
 
-	return app.recoverPanic(app.rateLimit(router))
+	return app.enableCORS(app.recoverPanic(app.rateLimit(router)))
 }

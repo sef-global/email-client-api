@@ -55,7 +55,7 @@ func (app *application) sendEmailHandler(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
-	emailStatus, err := mailer.NewMail(app.models.Emails, app.config.smtp.host, app.config.smtp.port, app.config.smtp.username, app.config.smtp.password, req.Sender, req.Subject, req.Recipients, req.Body)
+	emailStatus, err := mailer.NewMail(app.models.Emails, app.config.smtp.host, app.config.smtp.port, app.config.smtp.username, app.config.smtp.password, app.config.smtp.sender, req.Subject, req.Recipients, req.Body)
 	if err != nil {
 		http.Error(w, "Failed to send email", http.StatusInternalServerError)
 		return
