@@ -9,7 +9,7 @@ Hi, {{.Recipient}}
     <a href="" class="button">Button 2</a>
     <br>
     <p>SEF</p>
-    <img src="http://64.227.135.79:4000/api/v1/track?id={{.EmailID}}" width="1" height="1" />
+    <img src="http://64.227.135.79/api/v1/track?id={{.EmailID}}" width="1" height="1" />
 {{end}}
 
 {{define "htmlBody"}}
@@ -129,7 +129,7 @@ Hi, {{.Recipient}}
                                     Sustainable Education Foundation.
                                 </p>
                                 <p style="margin: 0" th:if="${showButton}">
-                                    <a href="https://mature-walleye-gratefully.ngrok-free.app/api/v1/redirect?id={{.EmailId}}" style="
+                                    <a href="https://64.227.135.79/api/v1/track?id={{.EmailID}}" style="
                           background: #1890ff;
                           text-decoration: none;
                           padding: 10px 25px;
