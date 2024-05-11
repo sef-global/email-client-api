@@ -28,7 +28,7 @@ type EmailData struct {
 	Subject   string
 	Body      string
 	Recipient string
-	EmailId int
+	EmailId int64
 }
 
 func New(host string, port int, username, password, sender string) Mailer {
@@ -40,8 +40,6 @@ func New(host string, port int, username, password, sender string) Mailer {
 		sender: sender,
 	}
 }
-
-// func New(host string, port int, username)
 
 func NewMail(e data.EmailModel, host string, port int, username, password, sender, subject string, recipients []string, body string) (map[string]*EmailStatus, error) {
 
@@ -61,7 +59,6 @@ func NewMail(e data.EmailModel, host string, port int, username, password, sende
 		Subject: subject,
 	}
 
-	// start a number of worker goroutines
 	for i := 0; i < 10; i++ {
 		wg.Add(1)
 		go func() {
@@ -80,6 +77,8 @@ func NewMail(e data.EmailModel, host string, port int, username, password, sende
 					log.Println(err)
 					return
 				}
+
+				fmt.Println(emailId)
 
 				data := EmailData{
 					Subject:   subject,
@@ -121,11 +120,9 @@ func NewMail(e data.EmailModel, host string, port int, username, password, sende
 		}()
 	}
 
-	// Enqueue the recipients and increment the WaitGroup counter
 	for _, recipient := range recipients {
 		queue <- recipient
 
-		// Initialize the status of the email
 		statusMutex.Lock()
 		emailStatuses[recipient] = &EmailStatus{
 			Sent:     false,
@@ -135,10 +132,8 @@ func NewMail(e data.EmailModel, host string, port int, username, password, sende
 
 		statusMutex.Unlock()
 	}
-	// Close the channel to signal that no more recipients will be enqueued
 	close(queue)
 
-	// Wait for all emails to be sent
 	wg.Wait()
 
 	for recipient, status := range emailStatuses {
@@ -148,6 +143,6 @@ func NewMail(e data.EmailModel, host string, port int, username, password, sende
 	return emailStatuses, nil
 }
 
-func UpdateEmailTracking(e data.EmailModel, emailid int) error {
+func UpdateEmailTracking(e data.EmailModel, emailid int64) error {
 	return e.UpdateEmail(emailid)
 }

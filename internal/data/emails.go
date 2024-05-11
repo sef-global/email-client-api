@@ -48,7 +48,7 @@ func ValidateEmail(v *validator.Validator, email *Email) {
 	v.Check(len(email.Body) >= 1, "body", "must be more than 1 bytes long")
 }
 
-func (e EmailModel) InsertEmail(email *Email, recipient string) (int, error) {
+func (e EmailModel) InsertEmail(email *Email, recipient string) (int64, error) {
 	query := `INSERT INTO emails (sender, body, subject) VALUES ($1, $2, $3) RETURNING id, created_at`
 
 	args := []any{email.Sender, email.Body, email.Subject}
@@ -66,7 +66,7 @@ func (e EmailModel) InsertEmail(email *Email, recipient string) (int, error) {
 	return emailID, nil
 }
 
-func (e EmailModel) InsertEmailRecipient(email *Email, recipient string) (int, error) {
+func (e EmailModel) InsertEmailRecipient(email *Email, recipient string) (int64, error) {
 
 	query := `INSERT INTO recipients (email_id, recipient, status, sent_time, opened)
 	VALUES ($1, $2, $3, $4, $5) RETURNING id`
@@ -75,7 +75,7 @@ func (e EmailModel) InsertEmailRecipient(email *Email, recipient string) (int, e
 
 	ctx, cancle := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancle()
-	var id int
+	var id int64
 	err := e.DB.QueryRowContext(ctx, query, args...).Scan(&id)
 	if err != nil {
 		return 0, err
@@ -86,8 +86,6 @@ func (e EmailModel) InsertEmailRecipient(email *Email, recipient string) (int, e
 func (e EmailModel) GetAllSent()(*[]EmailRecipient, error) {
 
 	query := `SELECT recipients.id, recipients.recipient, recipients.status, recipients.sent_time, recipients.opened, recipients.opened_time, emails.created_at, emails.sender, emails.body, emails.subject FROM recipients JOIN emails ON recipients.email_id = emails.id;`
-
-
 
 	ctx, cancle := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancle()
@@ -122,7 +120,7 @@ func (e EmailModel) GetAllSent()(*[]EmailRecipient, error) {
 	return &details, nil
 }
 
-func (e EmailModel) UpdateEmail(id int) error {
+func (e EmailModel) UpdateEmail(id int64) error {
 	query := `UPDATE recipients SET opened = true, opened_time = $1 WHERE id = $2`
 
 	args := []any{time.Now(), id}
@@ -131,7 +129,7 @@ func (e EmailModel) UpdateEmail(id int) error {
 	return err
 }
 
-func (e EmailModel) UpdateEmailStatus(id int) error {
+func (e EmailModel) UpdateEmailStatus(id int64) error {
 
 	query := `UPDATE recipients SET status = true , sent_time = $1 WHERE id = $2`
 

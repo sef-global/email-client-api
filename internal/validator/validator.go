@@ -6,37 +6,31 @@ var (
 	EmailRx = regexp.MustCompile(`^[a-zA-Z0-9.!#$%&'*+/=?^_` + "`" + `{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$`)
 )
 
-// Define a new validator type which contains a map of validation errors.
 type Validator struct {
 	Errors map[string]string
 }
 
-// New is a helper which creates a new Validator instance with an empty errors map.
 func New() *Validator {
 	return &Validator{Errors: make(map[string]string)}
 }
 
-// valid  returns true if the errors map doesn't contain any entries.
+
 func (v *Validator) Valid() bool {
 	return len(v.Errors) == 0
 }
 
-// AddError adds an error message to the map (so long as no entry already exists for
-// the given key
 func (v *Validator) AddError(key, message string) {
 	if _, exists := v.Errors[key]; !exists {
 		v.Errors[key] = message
 	}
 }
 
-// check adds an error message to the map only if a validation check it not "ok".
 func (v *Validator) Check(ok bool, key, message string) {
 	if !ok {
 		v.AddError(key, message)
 	}
 }
 
-// In returns true if a specific value is in a list of strings.
 func In(value string, list ...string) bool {
 	for i := range list {
 		if value == list[i] {
@@ -46,12 +40,10 @@ func In(value string, list ...string) bool {
 	return false
 }
 
-// matches returns true if a string value matches a specific regexp pattern.
 func Matches(value string, rx *regexp.Regexp) bool {
 	return rx.MatchString(value)
 }
 
-// unique returns true if all string values in a slice are unique.
 func Unique(values []string) bool {
 	uniqueValues := make(map[string]bool)
 
