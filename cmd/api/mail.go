@@ -104,7 +104,7 @@ func (app *application) showEmailHandler(w http.ResponseWriter, r *http.Request)
 		return
 	} 
 
-	details, err := app.models.Emails.Get(recipient)
+	details, err := app.models.Emails.GetAllSent()
 	if err != nil {
 		switch {
 		case errors.Is(err, data.ErrRecordNotFound):
@@ -115,7 +115,7 @@ func (app *application) showEmailHandler(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
-	err = app.writeJSON(w, http.StatusOK, envelop{"recipient": details}, nil)
+	err = app.writeJSON(w, http.StatusOK, envelop{"emails": details}, nil)
 	if err != nil {
 		app.serverErrorRespone(w, r, err)
 	}

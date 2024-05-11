@@ -83,18 +83,16 @@ func (e EmailModel) InsertEmailRecipient(email *Email, recipient string) (int, e
 	return id, nil
 }
 
-func (e EmailModel) Get(recipient string) (*[]EmailRecipient, error) {
-	if len(recipient) < 1 {
-		return nil, ErrRecordNotFound
-	}
-	query := `SELECT recipients.id, recipients.recipient, recipients.status, recipients.sent_time, recipients.opened, recipients.opened_time, emails.created_at, emails.sender, emails.body, emails.subject FROM recipients JOIN emails ON recipients.email_id = emails.id 
-	WHERE recipients.recipient = $1;`
+func (e EmailModel) GetAllSent()(*[]EmailRecipient, error) {
+
+	query := `SELECT recipients.id, recipients.recipient, recipients.status, recipients.sent_time, recipients.opened, recipients.opened_time, emails.created_at, emails.sender, emails.body, emails.subject FROM recipients JOIN emails ON recipients.email_id = emails.id;`
+
 
 
 	ctx, cancle := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancle()
 
-	rows, err := e.DB.QueryContext(ctx, query, recipient)
+	rows, err := e.DB.QueryContext(ctx, query)
 
 	if err != nil {
 		switch {
