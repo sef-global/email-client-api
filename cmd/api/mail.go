@@ -6,7 +6,6 @@ import (
 	"log"
 	"net/http"
 	"path"
-	"strconv"
 	"time"
 
 	"github.com/go-mail/mail/v2"
@@ -55,7 +54,7 @@ func (app *application) sendEmailHandler(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
-	emailStatus, err := mailer.NewMail(app.models.Emails, app.config.smtp.host, app.config.smtp.port, app.config.smtp.username, app.config.smtp.password, req.Sender, req.Subject, req.Recipients, req.Body)
+	emailStatus, err := mailer.NewMail(app.models.Emails, app.config.smtp.host, app.config.smtp.port, app.config.smtp.username, app.config.smtp.password, app.config.smtp.sender, req.Subject, req.Recipients, req.Body)
 	if err != nil {
 		http.Error(w, "Failed to send email", http.StatusInternalServerError)
 		return
@@ -70,27 +69,20 @@ func (app *application) sendEmailHandler(w http.ResponseWriter, r *http.Request)
 	}
 }
 
-// email tracking
 func (app *application) track(w http.ResponseWriter, r *http.Request) {
-	id := r.URL.Query().Get("id")
-	if id == "" {
-		http.Error(w, "Missing id parameter", http.StatusBadRequest)
+	id, err := app.readIDParam(r)
+	fmt.Println(id)
+	if err != nil {
+		app.writeJSON(w, http.StatusBadRequest, envelop{"status": map[string]string{"error": "Missing id parameter"}}, nil)
 		return
 	}
 	
-	log.Printf("Email opened: %s", id)
-
-	emailID, err := strconv.Atoi(id)
-	if err != nil {
-		log.Printf("Invalid email ID: %v", err)
-		http.Error(w, "Invalid email parameter", http.StatusBadRequest)
-		return
-	}
-
-	err = mailer.UpdateEmailTracking(app.models.Emails, emailID)
+	log.Printf("Email opened: %d", id)
+	
+	err = mailer.UpdateEmailTracking(app.models.Emails, id)
 	if err != nil {
 		log.Printf("Failed to update email tracking: %v", err)
-		http.Error(w, "Internal server error", http.StatusInternalServerError)
+		app.writeJSON(w, http.StatusBadRequest, envelop{"status": map[string]string{"error": "Internal server error"}}, nil)
 	}
 	redirectURL := "https://scholarx.sefglobal.org"
 	http.Redirect(w, r, redirectURL, http.StatusFound)
@@ -104,7 +96,7 @@ func (app *application) showEmailHandler(w http.ResponseWriter, r *http.Request)
 		return
 	} 
 
-	details, err := app.models.Emails.Get(recipient)
+	details, err := app.models.Emails.GetAllSent()
 	if err != nil {
 		switch {
 		case errors.Is(err, data.ErrRecordNotFound):
@@ -115,7 +107,7 @@ func (app *application) showEmailHandler(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
-	err = app.writeJSON(w, http.StatusOK, envelop{"recipient": details}, nil)
+	err = app.writeJSON(w, http.StatusOK, envelop{"emails": details}, nil)
 	if err != nil {
 		app.serverErrorRespone(w, r, err)
 	}
