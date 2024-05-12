@@ -54,7 +54,7 @@ type config struct {
 	}
 
 	limiter struct {
-		rps     float64 // request-per-second
+		rps     float64
 		burst   int
 		enabled bool
 	}

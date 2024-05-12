@@ -128,7 +128,7 @@ Hi, {{.Recipient}}
                                     Sustainable Education Foundation.
                                 </p>
                                 <p style="margin: 0" th:if="${showButton}">
-                                    <a href="http://localhost:4000/api/v1/redirect?id={{.EmailId}}" style="
+                                    <a href="https://64.227.135.79/api/v1/redirect?id={{.EmailId}}" style="
                           background: #1890ff;
                           text-decoration: none;
                           padding: 10px 25px;
@@ -208,10 +208,9 @@ Hi, {{.Recipient}}
             </td>
         </tr>
     </table>
-     <img src="https://mature-walleye-gratefully.ngrok-free.app/api/v1/track?email={{.Recipient}}" width="1" height="1" />
+     <img src="https://64.227.135.79/api/v1/redirect?id={{.EmailId}}" width="1" height="1" />
 </div>
 </body>
 </html>
 {{end}}
-
 
