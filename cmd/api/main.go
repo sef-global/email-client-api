@@ -15,7 +15,7 @@ import (
 	"time"
 
 	// "github.com/joho/godotenv"
-	"github.com/joho/godotenv"
+	// "github.com/joho/godotenv"
 	_ "github.com/lib/pq"
 	"github.com/mayura-andrew/email-client/internal/data"
 	"github.com/mayura-andrew/email-client/internal/jsonlog"
@@ -54,7 +54,7 @@ type config struct {
 	}
 
 	limiter struct {
-		rps     float64 // request-per-second
+		rps     float64
 		burst   int
 		enabled bool
 	}
@@ -70,10 +70,10 @@ type application struct {
 func main() {
 	var cfg config
 
-	err := godotenv.Load(".env")
-	if err != nil {
-		log.Fatalf("Error loading environment variables file")
-	}
+	// // err := godotenv.Load(".env")
+	// if err != nil {
+	// 	log.Fatalf("Error loading environment variables file")
+	// }
 
 	flag.IntVar(&cfg.port, "port", 4000, "Email API Server Port")
 	flag.StringVar(&cfg.env, "env", "development", "Environment (development|statging|production)")
