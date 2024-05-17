@@ -65,7 +65,7 @@ func NewMail(e data.EmailModel, host string, port int, username, password, sende
 			defer wg.Done()
 			for recipient := range queue {
 
-				tmpl, err := template.ParseFiles("internal/mailer/email_template.tmpl")
+				tmpl, err := template.ParseFiles("/home/mayuraandrew/dev/sef/send-bulk-email-client-api/internal/mailer/email_template.tmpl")
 
 				if err != nil {
 					log.Println(err)
