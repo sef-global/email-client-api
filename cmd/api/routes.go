@@ -18,6 +18,7 @@ func (app *application) routes() http.Handler {
 	router.HandlerFunc(http.MethodGet, "/", app.rootHandler)
 
 	router.HandlerFunc(http.MethodPost, "/api/v1/send", app.sendEmailHandler)
+	router.HandlerFunc(http.MethodGet, "/api/v1/sent", app.showEmailHandler)
 	router.HandlerFunc(http.MethodGet, "/api/v1/redirect", app.track)
 	router.HandlerFunc(http.MethodGet, "/api/v1/recipients/:email", app.showEmailHandler)
 

@@ -3,9 +3,9 @@
 ![Email API](https://github.com/mayura-andrew/send-bulk-email-client-api/assets/48531182/243b444d-9284-4008-be17-f678fe602c75)
 
 
-This API is developed for the ScholarX platform to handle the sending, tracking, and querying of emails. It provides several endpoints for these operations. You can access the API at [https://sefglobal.org/].
+This API is developed for the ScholarX platform to handle the sending, and querying of emails. It provides several endpoints for these operations. Visit here [https://sefglobal.org/].
 
-Running API URL := https://mature-walleye-gratefully.ngrok-free.app/api/v1/healthcheck
+Running API URL := (https://64.227.135.79/)
 ## Endpoints
 
 ### POST /send (Status : Completed ☑️)
@@ -64,5 +64,3 @@ The content of the emails is generated from a Go template file, `email_template.
 - `Subject`: The subject of the email.
 - `Body`: The body of the email.
 - `Recipient`: The email address of the recipient.
-
-The `plainBody` template also includes a tracking pixel, which calls the `/track` endpoint when the email is opened. This allows the API to track when emails are opened.
