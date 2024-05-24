@@ -64,3 +64,14 @@ The content of the emails is generated from a Go template file, `email_template.
 - `Subject`: The subject of the email.
 - `Body`: The body of the email.
 - `Recipient`: The email address of the recipient.
+
+## Docker Usage
+
+This application is also available as a Docker image and can be pulled from Docker Hub and run locally. 
+
+
+https://hub.docker.com/r/mayuraandrew/gosendemailapi
+
+---
+
+Thank you 😄

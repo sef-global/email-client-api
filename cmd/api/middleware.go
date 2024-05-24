@@ -85,6 +85,7 @@ func (app *application) enableCORS(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		allowedOrigins := map[string]bool{
 			"http://localhost:5173": true,
+			"https://scholarx.sefglobal.org": true,
 			"*": true,
 		}
 
