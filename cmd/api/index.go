@@ -41,6 +41,7 @@ func (app *application) rootHandler(w http.ResponseWriter, r *http.Request) {
 			<p><strong>GET /:</strong> Root endpoint.</p>
 			<p><strong>POST /api/v1/send:</strong> Send an email.</p>
 			<p><strong>GET /api/v1/track:</strong> Track an email.</p>
+			<p><strong>GET /api/v1/sent:</strong> Retrieve all sent emails.</p>
 			<p><strong>GET /api/v1/recipients/:email:</strong> Get information about a specific email recipient.</p>
 		</div>
 	</body>
