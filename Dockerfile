@@ -17,6 +17,7 @@ ENV DB_DSN= \
     SMTPSENDER= \
     SMTPHOST= \
     SMTPUSERNAME= \
-    SMTPPASS=
+    SMTPPASS= \
+    URL= 
 
 CMD ["./app"]

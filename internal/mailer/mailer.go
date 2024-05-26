@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"html/template"
 	"log"
+	"os"
 	"sync"
 	"time"
 
@@ -29,6 +30,7 @@ type EmailData struct {
 	Body      string
 	Recipient string
 	EmailId int64
+	URL string
 }
 
 func New(host string, port int, username, password, sender string) Mailer {
@@ -66,11 +68,13 @@ func NewMail(e data.EmailModel, host string, port int, username, password, sende
 			for recipient := range queue {
 
 				tmpl, err := template.ParseFiles("./internal/mailer/email_template.tmpl")
-
+				
 				if err != nil {
 					log.Println(err)
-					return
+					continue
 				}
+				url:= os.Getenv("URL")
+				fmt.Println("URL: ", url)
 
 				emailId, err := e.InsertEmail(email, recipient)
 				if err != nil {
@@ -83,6 +87,7 @@ func NewMail(e data.EmailModel, host string, port int, username, password, sende
 					Body:      body,
 					Recipient: recipient,
 					EmailId: emailId,
+					URL: url,
 				}
 
 				bodyBuf := new(bytes.Buffer)
