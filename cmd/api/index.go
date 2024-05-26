@@ -42,10 +42,8 @@ func (app *application) rootHandler(w http.ResponseWriter, r *http.Request) {
 			<p><strong>POST /api/v1/send:</strong> Send an email.</p>
 			<p><strong>GET /api/v1/track:</strong> Track an email.</p>
 			<p><strong>GET /api/v1/recipients/:email:</strong> Get information about a specific email recipient.</p>
-			<h2>Contact</h2>
-			<p>Visit our website: <a href="https://mayuraandrew.tech">https://mayuraandrew.tech</a></p>
 		</div>
 	</body>
-	</html>go get -u github.com/go-swagger/go-swagger/cmd/swagger
+	</html>
     `)
 }
