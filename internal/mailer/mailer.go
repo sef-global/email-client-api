@@ -65,7 +65,7 @@ func NewMail(e data.EmailModel, host string, port int, username, password, sende
 			defer wg.Done()
 			for recipient := range queue {
 
-				tmpl, err := template.ParseFiles("/app/internal/mailer/email_template.tmpl")
+				tmpl, err := template.ParseFiles("./internal/mailer/email_template.tmpl")
 
 				if err != nil {
 					log.Println(err)
@@ -89,8 +89,8 @@ func NewMail(e data.EmailModel, host string, port int, username, password, sende
 				err = tmpl.ExecuteTemplate(bodyBuf, "htmlBody", data)
 
 				if err != nil {
-					log.Println(err)
-					return
+					log.Println(err)				
+					continue
 				}
 
 				m := mail.NewMessage()
