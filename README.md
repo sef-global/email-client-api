@@ -70,7 +70,7 @@ The content of the emails is generated from a Go template file, `email_template.
 This application is also available as a Docker image and can be pulled from Docker Hub and run locally. 
 
 
-https://hub.docker.com/r/mayuraandrew/gosendemailapi
+https://hub.docker.com/r/mayuraandrew/go-email-client
 
 ---
 
